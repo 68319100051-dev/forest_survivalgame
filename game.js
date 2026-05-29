@@ -396,12 +396,6 @@ function toggleReady() {
 }
 
 function startCharacterSequenceFromLobby() {
-  const app = document.getElementById('app');
-  if (app) {
-    app.style.pointerEvents = 'auto';
-    app.style.filter = 'none';
-  }
-  
   document.getElementById('online-lobby-panel').style.display = 'none';
   document.getElementById('start-screen').style.display = 'flex';
   
@@ -411,14 +405,17 @@ function startCharacterSequenceFromLobby() {
     roomCodeDisplay.style.display = 'block';
   }
 
-  // Pre-fill user name if available
+  // Pre-fill user name and auto-start gacha for multiplayer
   if (socket && G.mode === 'multi') {
     const me = G.lobbyPlayers.find(p => p.id === socket.id);
     const nameInput = document.getElementById('player-name-input');
     if (me && nameInput) {
       nameInput.value = me.name;
-      nameInput.disabled = true; // Prevent changing name after start
     }
+    // Auto-start gacha immediately so players can't bypass the confirm flow
+    setTimeout(() => {
+      startCharacterSequence();
+    }, 200);
   }
 }
 
@@ -643,6 +640,13 @@ function initGameMultiplayer(roomData) {
     }
     document.getElementById('start-screen').style.display = 'none';
     
+    // Unlock main game interface
+    const app = document.getElementById('app');
+    if (app) {
+      app.style.pointerEvents = 'auto';
+      app.style.filter = 'none';
+    }
+    
     G.day = 1;
     G.currentPlayer = 0;
     G.usedEventIds = [];
@@ -711,6 +715,13 @@ function initGame(playerName) {
       ANTHROPIC_API_KEY = keyInput.value.trim();
     }
     document.getElementById('start-screen').style.display = 'none';
+    
+    // Unlock main game interface
+    const app = document.getElementById('app');
+    if (app) {
+      app.style.pointerEvents = 'auto';
+      app.style.filter = 'none';
+    }
     
     // Reset G state
     G.day = 1;
