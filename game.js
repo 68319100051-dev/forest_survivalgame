@@ -163,6 +163,11 @@ if (socket) {
     startCharacterSequenceFromLobby();
   });
 
+  socket.on('allConfirmed', (roomData) => {
+    G.lobbyPlayers = roomData.players;
+    initGameMultiplayer(roomData);
+  });
+
   socket.on('kicked', () => {
     alert('คุณถูกเตะออกจากห้อง');
     leaveLobby(true);
@@ -270,7 +275,7 @@ function joinOnlineRoom() {
 }
 
 function copyRoomCode() {
-  const text = `SURV-${G.roomCode}`;
+  const text = G.roomCode;
   navigator.clipboard.writeText(text).then(() => {
     const btn = document.querySelector('.copy-btn');
     const originalText = btn.textContent;
@@ -391,11 +396,6 @@ function toggleReady() {
 }
 
 function startCharacterSequenceFromLobby() {
-  if (G.isHost && socket && G.lobbyPlayers.length === 4 && G.lobbyPlayers.every(p => p.ready) && G.mode === 'multi') {
-    // Only host triggers the actual start command to server if not already started
-    // But for now, we assume gameStarted event triggered this
-  }
-  
   const app = document.getElementById('app');
   if (app) {
     app.style.pointerEvents = 'auto';
@@ -410,6 +410,32 @@ function startCharacterSequenceFromLobby() {
     roomCodeDisplay.textContent = `ROOM: SURV-${G.roomCode}`;
     roomCodeDisplay.style.display = 'block';
   }
+
+  // Pre-fill user name if available
+  if (socket && G.mode === 'multi') {
+    const me = G.lobbyPlayers.find(p => p.id === socket.id);
+    const nameInput = document.getElementById('player-name-input');
+    if (me && nameInput) {
+      nameInput.value = me.name;
+      nameInput.disabled = true; // Prevent changing name after start
+    }
+  }
+}
+
+function hostStartGame() {
+  if (!G.isHost) return;
+  if (G.lobbyPlayers.length < 4) {
+    alert('ต้องมีผู้เล่นครบ 4 คนก่อนจึงจะเริ่มเกมได้ (สามารถกดปุ่ม "🤖 + เติมบอต" ได้ครับ)');
+    return;
+  }
+  const allReady = G.lobbyPlayers.every(p => p.ready);
+  if (!allReady) {
+    alert('ผู้เล่นทุกคนต้องเตรียมพร้อมก่อนเริ่มเกม');
+    return;
+  }
+  if (socket) {
+    socket.emit('startGame', { roomCode: G.roomCode });
+  }
 }
 
 function leaveLobby(force = false) {
@@ -419,7 +445,6 @@ function leaveLobby(force = false) {
   
   if (socket) {
     socket.disconnect();
-    // Reconnect for future games
     setTimeout(() => { window.location.reload(); }, 500);
   } else {
     G.lobbyPlayers = [];
@@ -432,43 +457,6 @@ function leaveLobby(force = false) {
       app.style.pointerEvents = 'auto';
       app.style.filter = 'none';
     }
-  }
-}
-
-function startCharacterSequenceFromLobby() {
-  // Unlock main game interface
-  const app = document.getElementById('app');
-  if (app) {
-    app.style.pointerEvents = 'auto';
-    app.style.filter = 'none';
-  }
-  
-  document.getElementById('online-lobby-panel').style.display = 'none';
-  document.getElementById('start-screen').style.display = 'flex';
-  
-  // Setup room code in start-screen for consistency
-  const roomCodeDisplay = document.getElementById('room-code-display');
-  if (roomCodeDisplay) {
-    roomCodeDisplay.textContent = `ROOM: SURV-${G.roomCode}`;
-    roomCodeDisplay.style.display = 'block';
-  }
-}
-
-function leaveLobby() {
-  if (G.isHost) {
-    if (!confirm('หากคุณออก ห้องจะถูกปิด (Dissolve Room) ยืนยันหรือไม่?')) return;
-  }
-  
-  G.lobbyPlayers = [];
-  document.getElementById('online-lobby-panel').style.display = 'none';
-  document.getElementById('mode-selector-screen').style.display = 'flex';
-  hideMultiplayerOptions();
-  
-  // Unlock UI if it was locked
-  const app = document.getElementById('app');
-  if (app) {
-    app.style.pointerEvents = 'auto';
-    app.style.filter = 'none';
   }
 }
 
@@ -596,7 +584,6 @@ function startCharacterSequence() {
   
   const confirmBtn = document.getElementById('confirm-start-btn');
   confirmBtn.style.display = 'none';
-  confirmBtn.onclick = function() { initGame(name); };
 
   let count = 0;
   const totalSteps = 25;
@@ -613,16 +600,108 @@ function startCharacterSequence() {
     count++;
     if (count >= totalSteps) {
       clearInterval(interval);
-      reel.classList.add('burst-effect');
-      jobName.classList.add('glow-text');
+      if (reel) reel.classList.add('burst-effect');
+      if (jobName) jobName.classList.add('glow-text');
       
-      document.getElementById('char-desc').textContent = job.skill;
+      let finalJob;
+      if (socket && G.mode === 'multi') {
+        const myLobbyData = G.lobbyPlayers.find(p => p.id === socket.id);
+        finalJob = JOBS.find(j => j.id === myLobbyData.job.id) || myLobbyData.job;
+      } else {
+        finalJob = JOBS[Math.floor(Math.random() * JOBS.length)];
+      }
+      
+      if (reel) reel.textContent = finalJob.emoji;
+      if (jobName) jobName.textContent = finalJob.name;
+      
+      const charDesc = document.getElementById('char-desc');
+      if (charDesc) charDesc.textContent = finalJob.skill;
+      
       confirmBtn.style.display = 'block';
+      if (socket && G.mode === 'multi') {
+        confirmBtn.onclick = function() {
+          socket.emit('confirmJob', { roomCode: G.roomCode, playerName: name });
+          confirmBtn.disabled = true;
+          confirmBtn.style.background = 'var(--bg4)';
+          confirmBtn.textContent = '⏱️ รอเพื่อนคนอื่นเลือกอาชีพ...';
+        };
+      } else {
+        confirmBtn.onclick = function() { initGame(name); };
+      }
     }
   }, 100);
 }
 
 window.startCharacterSequence = startCharacterSequence;
+
+function initGameMultiplayer(roomData) {
+  try {
+    const keyInput = document.getElementById('api-key-input');
+    if (keyInput && keyInput.value.trim()) {
+      localStorage.setItem('anthropic_api_key', keyInput.value.trim());
+      window.ANTHROPIC_API_KEY = keyInput.value.trim();
+    }
+    document.getElementById('start-screen').style.display = 'none';
+    
+    G.day = 1;
+    G.currentPlayer = 0;
+    G.usedEventIds = [];
+    G.activeTraps = [];
+    G.combatState = null;
+    G.activeEvent = {};
+    G.mapEvent = null;
+    G.camp = {
+      structures: [],
+      sharedItems: [],
+      level: 1
+    };
+
+    G.rescueData = { attempts: [], lastChance: 0, success: false };
+
+    G.players = roomData.players.map((p, i) => {
+      const jobDetails = JOBS.find(j => j.id === p.job.id) || p.job;
+      return {
+        name: p.name, 
+        emoji: PLAYER_EMOJIS[i] || '👤', 
+        color: PLAYER_COLORS[i] || '#ffffff',
+        job: jobDetails,
+        hp: 100, hunger: 80, thirst: 100, energy: 100, sanity: 100,
+        hoursLeft: 24,
+        trust: 50,
+        inventory: [],
+        statuses: [],
+        history: [],
+        alive: true,
+        atCamp: true,
+        dayNotes: [],
+        skillUsed: false,
+        isBot: !!p.isBot,
+        id: p.id,
+        stats: {
+          itemsCrafted: 0,
+          itemsShared: 0,
+          animalsDefeated: 0,
+          damageTaken: 0,
+          dayDied: null,
+          actionsTaken: 0
+        }
+      };
+    });
+
+    const wp = document.getElementById('week-progress');
+    if (wp) {
+      wp.innerHTML = Array.from({length:7},(_,i)=>`<div class="day-pip${i===0?' current':''}" id="pip${i}"></div>`).join('');
+    }
+
+    buildCraftList();
+    updateCampUI();
+    startDay();
+    addMsg('🌲 ทุกคนเลือกอาชีพและเข้าสู่ป่าแล้ว! เริ่มต้นเอาชีวิตรอดไปด้วยกัน', 'bubble-system');
+  } catch(err) {
+    console.error('Error in initGameMultiplayer:', err);
+    alert('เกิดข้อผิดพลาดในการเริ่มต้นเกมหลายคน: ' + err.message);
+  }
+}
 
 function initGame(playerName) {
   try {
@@ -3235,57 +3314,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Direct JS Event Binding to avoid HTML reference errors
     const startBtn = document.getElementById('start-btn');
     if (startBtn) {
-        startBtn.onclick = function() {
-            const nameInput = document.getElementById('player-name-input');
-            const name = nameInput ? nameInput.value.trim() : '';
-
-            if (!name) {
-                alert('กรุณาใส่ชื่อของคุณ');
-                return;
-            }
-
-            // Hide Lobby
-            const lobbyArea = document.getElementById('lobby-input-area');
-            if (lobbyArea) lobbyArea.style.display = 'none';
-            if (startBtn) startBtn.style.display = 'none';
-
-            // Show Gacha Container
-            const seqContainer = document.getElementById('character-sequence');
-            if (!seqContainer) return;
-            seqContainer.style.display = 'flex';
-
-            // Reset and Bind Confirmation Button
-            const confirmBtn = document.getElementById('confirm-start-btn');
-            if (confirmBtn) {
-                confirmBtn.style.display = 'none';
-                confirmBtn.onclick = function() { initGame(name); };
-            }
-
-            // Gacha Animation Loop
-            let count = 0;
-            const totalSteps = 25;
-            const interval = setInterval(() => {
-                const job = JOBS[Math.floor(Math.random() * JOBS.length)];
-                const reel = document.getElementById('char-animation');
-                const jobName = document.getElementById('char-name');
-
-                if (reel && jobName) {
-                    reel.textContent = job.emoji;
-                    jobName.textContent = job.name;
-                }
-
-                count++;
-                if (count >= totalSteps) {
-                    clearInterval(interval);
-                    if (reel) reel.classList.add('burst-effect');
-                    if (jobName) jobName.classList.add('glow-text');
-
-                    const charDesc = document.getElementById('char-desc');
-                    if (charDesc) charDesc.textContent = job.skill;
-                    if (confirmBtn) confirmBtn.style.display = 'block';
-                }
-            }, 100);
-        };
+        startBtn.onclick = startCharacterSequence;
     }
 });
 

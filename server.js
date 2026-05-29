@@ -15,6 +15,19 @@ app.use(express.static(path.join(__dirname)));
 // Game State Management
 const rooms = new Map();
 
+const SERVER_JOBS = [
+  { id:'hunter',    name:'นักล่า',      emoji:'🏹', skill:'ล่าสัตว์ได้ทันที (ใช้ได้ 1 ครั้ง/เกม)',     skDesc:'ล่าสัตว์' },
+  { id:'doctor',    name:'หมอ',         emoji:'🩺', skill:'รักษาทุกคนในกลุ่ม HP +50 (ใช้ได้ 1 ครั้ง/เกม)', skDesc:'รักษากลุ่ม' },
+  { id:'thief',     name:'โจร',         emoji:'🗡️', skill:'ขโมยไอเทม 2 ชิ้นจากใครก็ได้ (ใช้ได้ 1 ครั้ง/เกม)', skDesc:'ขโมยคู่' },
+  { id:'chef',      name:'พ่อครัว',     emoji:'🍳', skill:'เสกอาหารอุ่น 3 กล่องให้กลุ่ม (ใช้ได้ 1 ครั้ง/เกม)', skDesc:'เสกอาหาร' },
+  { id:'scout',     name:'ลูกเสือ',     emoji:'🧭', skill:'เปิดเผย Loot ของทุกที่ในวันนี้ (ใช้ได้ 1 ครั้ง/เกม)',              skDesc:'สแกนพื้นที่' },
+  { id:'soldier',   name:'ทหาร',        emoji:'⚔️', skill:'กำจัดสัตว์ป่าในพื้นที่ปัจจุบันทันที (ใช้ได้ 1 ครั้ง/เกม)',  skDesc:'ปราบบอส' },
+  { id:'shaman',    name:'หมอผี',       emoji:'🪄', skill:'พยากรณ์อากาศและเหตุการณ์ 3 วันข้างหน้า (ใช้ได้ 1 ครั้ง/เกม)',   skDesc:'หยั่งรู้' },
+  { id:'engineer',  name:'วิศวกร',      emoji:'🔧', skill:'สร้างสิ่งปลูกสร้างแคมป์ 1 อย่างฟรี (ใช้ได้ 1 ครั้ง/เกม)',    skDesc:'สร้างฟรี' },
+  { id:'merchant',  name:'พ่อค้า',      emoji:'💰', skill:'แลกไอเทมในตัวกับคลังแคมป์ได้ 3 ชิ้น (ใช้ได้ 1 ครั้ง/เกม)',    skDesc:'เทรดด่วน' },
+  { id:'spy',       name:'สายลับ',      emoji:'🕵️', skill:'ดูบทบาทและของทุกคน (ใช้ได้ 1 ครั้ง/เกม)',       skDesc:'เปิดเผยความลับ' }
+];
+
 io.on('connection', (socket) => {
     console.log('A user connected:', socket.id);
 
@@ -119,8 +132,42 @@ io.on('connection', (socket) => {
         
         const allReady = room.players.every(p => p.ready);
         if (allReady && room.players.length === 4) {
-            room.gameState = 'playing';
+            // Shuffle jobs and assign to players unique ones
+            const shuffledJobs = [...SERVER_JOBS].sort(() => Math.random() - 0.5);
+            room.players.forEach((player, index) => {
+                player.job = shuffledJobs[index];
+                player.confirmedJob = false;
+                if (player.isBot) {
+                    player.confirmedJob = true; // Bots are immediately confirmed!
+                }
+            });
+            room.gameState = 'character_select';
             io.to(data.roomCode).emit('gameStarted', room);
+            console.log(`Game starting in room ${data.roomCode}. Unique jobs pre-assigned.`);
+        }
+    });
+
+    socket.on('confirmJob', (data) => {
+        const room = rooms.get(data.roomCode);
+        if (!room) return;
+        
+        const player = room.players.find(p => p.id === socket.id);
+        if (player) {
+            if (data.playerName) {
+                player.name = data.playerName;
+            }
+            player.confirmedJob = true;
+            console.log(`Player ${player.name} confirmed job ${player.job.name} in room ${data.roomCode}`);
+            
+            // Check if all players have confirmed their jobs
+            const allConfirmed = room.players.every(p => p.confirmedJob);
+            if (allConfirmed) {
+                room.gameState = 'playing';
+                io.to(data.roomCode).emit('allConfirmed', room);
+                console.log(`All players in room ${data.roomCode} confirmed their jobs. Transitioning to playing state!`);
+            } else {
+                io.to(data.roomCode).emit('updateLobby', room);
+            }
         }
     });
 
