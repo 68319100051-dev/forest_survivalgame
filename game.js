@@ -179,8 +179,21 @@ if (socket) {
   
   // Real-time Action Sync
   socket.on('syncAction', (data) => {
-    // Handle synced action (e.g., someone else explored)
-    // This will be expanded in later steps for state management
+    console.log('Action received:', data);
+    const { actionType, pi, payload } = data;
+    
+    switch(actionType) {
+        case 'explore':
+            // Handle remote explore action
+            // Need to make sure the state is updated and UI is refreshed
+            // This is complex, will need a robust state sync strategy
+            break;
+        case 'endTurn':
+            // Remote player ended turn
+            nextTurn();
+            break;
+        // Add other cases ...
+    }
   });
 }
 
@@ -2157,13 +2170,10 @@ async function callAI(pi, action, hoursCost, meta={}) {
 
   showTyping();
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch('/api/narrate', {
       method:'POST',
       headers:{
-        'Content-Type':'application/json',
-        'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'dangerously-allow-html-user-access': 'true'
+        'Content-Type':'application/json'
       },
       body: JSON.stringify({
         model: ANTHROPIC_MODEL,

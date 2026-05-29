@@ -2,12 +2,35 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
+const fetch = require('node-fetch'); // NOTE: Assuming node-fetch is available or needs to be installed
 
 const app = express();
+app.use(express.json());
 const server = http.createServer(app);
 const io = new Server(server);
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3000;
+
+// API Proxy
+app.post('/api/narrate', async (req, res) => {
+    try {
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': process.env.ANTHROPIC_API_KEY,
+                'anthropic-version': '2023-06-01',
+                'dangerously-allow-html-user-access': 'true'
+            },
+            body: JSON.stringify(req.body)
+        });
+        
+        const data = await response.json();
+        res.status(response.status).json(data);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
 
 // Serve static files
 app.use(express.static(path.join(__dirname)));
