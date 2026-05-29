@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>หลงป่า — 7 วันแห่งการเอาชีวิตรอด</title>
+<meta name="description" content="เกมเอาชีวิตรอดในป่า 7 วัน — ผู้เล่น 4 คน มีบทบาทลับ เอาตัวรอดและอย่าไว้ใจใคร">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Cinzel:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ═══ GAME MODE SELECTOR ═══ -->
+<div id="mode-selector-screen" style="position:fixed;inset:0;z-index:1000;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;background:radial-gradient(circle at center, #1a2a20 0%, var(--bg) 100%);">
+  <div style="text-align:center;">
+    <div style="font-size:80px;filter:drop-shadow(0 0 30px rgba(72,200,130,0.4))">🌲</div>
+    <h1 style="font-family:'Cinzel',serif;font-size:42px;color:var(--green2);margin-top:10px;text-shadow:0 0 20px rgba(72,200,130,0.5);">หลงป่า</h1>
+    <p style="color:var(--text3);font-size:14px;letter-spacing:2px;text-transform:uppercase;">Dual-Mode Architecture</p>
+  </div>
+
+  <div style="display:flex;gap:20px;width:min(90%,500px);">
+    <div onclick="selectGameMode('single')" style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:16px;padding:24px;text-align:center;cursor:pointer;transition:all 0.3s;" onmouseover="this.style.borderColor='var(--green2)';this.style.transform='translateY(-5px)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform='none'">
+      <div style="font-size:40px;margin-bottom:12px;">👤</div>
+      <div style="font-family:'Cinzel',serif;font-size:18px;color:var(--green2);margin-bottom:8px;">Single Player</div>
+      <p style="font-size:11px;color:var(--text3);line-height:1.4;">ผจญภัยกับทีมบอต AI 3 ตัว<br>ควบคุมเทิร์นด้วยตัวเองทั้งหมด</p>
+    </div>
+
+    <div onclick="showMultiplayerOptions()" style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:16px;padding:24px;text-align:center;cursor:pointer;transition:all 0.3s;" onmouseover="this.style.borderColor='var(--amber2)';this.style.transform='translateY(-5px)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform='none'">
+      <div style="font-size:40px;margin-bottom:12px;">🌐</div>
+      <div style="font-family:'Cinzel',serif;font-size:18px;color:var(--amber2);margin-bottom:8px;">Multiplayer</div>
+      <p style="font-size:11px;color:var(--text3);line-height:1.4;">เล่นออนไลน์กับเพื่อน (Beta)<br>ระบบรอเทิร์นและซิงค์ข้อมูล</p>
+    </div>
+  </div>
+
+  <!-- Multiplayer Options (Hidden initially) -->
+  <div id="multi-options" style="display:none; flex-direction:column; gap:12px; width:300px; margin-top:20px;">
+    <button class="screen-btn" onclick="createOnlineRoom()" style="background:var(--amber); color:var(--bg);">🆕 สร้างห้องใหม่ (Host)</button>
+    <div style="display:flex; gap:8px;">
+      <input type="text" id="join-room-code" placeholder="รหัสห้อง 4 หลัก..." maxlength="4" style="flex:1; background:var(--bg4); border:1px solid var(--border); border-radius:6px; color:var(--text); padding:8px; text-align:center; font-family:monospace; text-transform:uppercase;" />
+      <button class="screen-btn" onclick="joinOnlineRoom()" style="flex:1;">เข้าร่วม 🚪</button>
+    </div>
+    <button class="screen-btn" onclick="hideMultiplayerOptions()" style="background:transparent; border:none; font-size:12px; color:var(--text3);">⬅️ ย้อนกลับ</button>
+  </div>
+</div>
+
+<!-- ═══ ONLINE LOBBY PANEL ═══ -->
+<div id="online-lobby-panel" class="screen-overlay" style="display:none; background:rgba(0,0,0,0.95); backdrop-filter:blur(10px);">
+  <div class="lobby-card glass" style="max-width:550px; width:92%; background:var(--bg3); border:1px solid var(--border2); border-radius:20px; padding:30px; box-shadow:0 0 50px rgba(0,0,0,0.8);">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:25px;">
+      <div>
+        <h2 style="margin:0; font-size:28px; color:var(--green2); font-family:'Cinzel',serif;">🌐 ล็อบบี้เครือข่าย</h2>
+        <div style="display:flex; align-items:center; gap:10px; margin-top:8px;">
+          <div style="color:var(--amber2); font-family:monospace; font-weight:bold; font-size:20px; background:rgba(200,134,26,0.1); padding:4px 12px; border-radius:8px; border:1px solid rgba(200,134,26,0.3);">
+            รหัสห้อง: <span id="lobby-room-code">----</span>
+          </div>
+          <button class="copy-btn" onclick="copyRoomCode()" style="background:var(--bg4); border:1px solid var(--border); color:var(--text2); padding:6px 12px; border-radius:6px; cursor:pointer; font-size:13px; transition:all 0.2s;">📋 คัดลอกรหัส</button>
+        </div>
+      </div>
+      <button class="screen-btn" onclick="leaveLobby()" style="background:var(--red); color:#fff; padding:6px 16px; font-size:13px; margin:0;">ออกจากห้อง</button>
+    </div>
+
+    <!-- 4-Slot Player List Card -->
+    <div id="player-slots" style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:30px;">
+      <!-- Slots 1-4 will be rendered here via renderLobbyPlayers() -->
+    </div>
+
+    <!-- Action Footer -->
+    <div id="lobby-action-footer" style="display:flex; gap:12px; padding-top:20px; border-top:1px solid var(--border);">
+      <!-- สำหรับลูกทีม -->
+      <button id="ready-online-btn" class="screen-btn" onclick="toggleReady()" style="flex:1; background:var(--blue); display:none;">เตรียมพร้อม</button>
+      
+      <!-- สำหรับ Host -->
+      <button id="start-online-game-btn" class="screen-btn" onclick="startCharacterSequenceFromLobby()" style="flex:1; background:var(--green2); display:none;">เริ่มเกม (เฉพาะ Host)</button>
+      <button id="add-bot-btn" class="screen-btn" onclick="addBotToLobby()" style="background:var(--bg4); border:1px solid var(--border); color:var(--text2); font-size:13px; display:none;">🤖 + เติมบอต</button>
+    </div>
+    
+    <div id="lobby-status-msg" style="margin-top:20px; font-size:13px; color:var(--text3); text-align:center; font-style:italic;">
+      กำลังซิงค์ข้อมูลกับเซิร์ฟเวอร์...
+    </div>
+  </div>
+</div>
+
+<!-- ═══ LOBBY SCREEN (CHARACTER SELECTION) ═══ -->
+<div id="start-screen" style="display:none;">
+  <div id="room-code-display" style="display:none;background:rgba(212,144,42,0.1);border:1px solid var(--amber);padding:4px 12px;border-radius:20px;font-size:11px;color:var(--amber2);margin-bottom:15px;font-family:monospace;">ROOM: SURV-XXXX</div>
+  <div style="font-size:56px;line-height:1;margin-bottom:4px;filter:drop-shadow(0 0 20px rgba(72,200,130,0.4))">🌲</div>
+  <h1 class="screen-title">หลงป่า</h1>
+  
+  <div id="lobby-input-area" style="display:flex;flex-direction:column;gap:10px;width:min(90%,280px);">
+    <input id="player-name-input" type="text" placeholder="ใส่ชื่อของคุณ..." style="width:100%;padding:8px 10px;background:var(--bg4);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;outline:none;text-align:center;" />
+    <input id="api-key-input" type="password" placeholder="ใส่ Anthropic API Key..." style="width:100%;padding:8px 10px;background:var(--bg4);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:11px;outline:none;text-align:center;" />
+  </div>
+
+  <div id="character-sequence">
+    <div id="char-animation" class="gacha-reel">👤</div>
+    <div class="gacha-label">บทบาทของคุณคือ...</div>
+    <div id="char-name" class="gacha-job-name">???</div>
+    <div id="char-desc" style="font-size:12px;color:var(--text2);margin-top:10px;text-align:center;"></div>
+    <button class="screen-btn" id="confirm-start-btn" style="display:none; margin-top:20px;">⚔️ เข้าสู่ป่า</button>
+  </div>
+
+  <button class="screen-btn" id="start-btn">⚔️ เริ่มเข้าสู่เกม</button>
+</div>
+
+<!-- ═══ END SCREEN ═══ -->
+<div id="end-screen">
+  <div id="end-icon" style="font-size:60px;margin-bottom:8px;"></div>
+  <div class="screen-title" id="end-title"></div>
+  <p class="screen-sub" id="end-msg" style="margin-bottom:16px;"></p>
+  <div style="background:rgba(16,22,18,0.85);border:1px solid var(--border);border-radius:14px;padding:16px;width:min(92%,580px);margin-bottom:16px;">
+    <h2 style="color:var(--green2);font-family:'Cinzel',serif;font-size:15px;letter-spacing:1px;margin-bottom:12px;text-align:center;">📊 บทบาทและคะแนนเอาชีวิตรอด</h2>
+    <table class="end-scoreboard" id="end-scoreboard-table">
+      <thead><tr><th>ผู้เล่น</th><th>บทบาทลับ</th><th>สถานะ</th><th>คะแนน</th></tr></thead>
+      <tbody id="end-scoreboard-body"></tbody>
+    </table>
+    <div id="end-awards" class="end-awards-container"></div>
+  </div>
+  <button class="screen-btn" onclick="location.reload()">🔄 เล่นใหม่</button>
+</div>
+
+<!-- ═══ SHARE/CRAFT OVERLAY ═══ -->
+<div id="share-overlay">
+  <div id="share-box">
+    <div id="share-title">แบ่งของให้ใคร?</div>
+    <div id="share-target-list"></div>
+    <button class="share-close" onclick="closeShare()">✕ ยกเลิก</button>
+  </div>
+</div>
+
+<!-- ═══ COMBAT OVERLAY ═══ -->
+<div id="combat-overlay">
+  <div id="combat-box">
+    <div class="combat-title">🐾 เผชิญหน้าสัตว์ร้าย!</div>
+    <div id="combat-desc" style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.6;"></div>
+    <div class="combat-stats">
+      <div class="combat-stat-col">
+        <span style="font-size:10px;color:var(--text3);">🩸 HP สัตว์ร้าย</span>
+        <span id="combat-wild-hp" class="combat-stat-val" style="color:var(--red2);"></span>
+      </div>
+      <div class="combat-stat-col">
+        <span style="font-size:10px;color:var(--text3);">❤️ HP ของคุณ</span>
+        <span id="combat-player-hp" class="combat-stat-val" style="color:var(--green2);"></span>
+      </div>
+    </div>
+    <div id="combat-actions-list"></div>
+  </div>
+</div>
+
+<!-- ═══ PVP OVERLAY ═══ -->
+<div id="pvp-overlay">
+  <div id="pvp-box">
+    <div class="pvp-title">⚔️ โจมตีผู้รอดชีวิต!</div>
+    <div class="pvp-subtitle" id="pvp-subtitle">เลือกเป้าหมายและวิธีการ — ผลลัพธ์ขึ้นกับอาวุธและสถานการณ์</div>
+    <div id="pvp-target-list"></div>
+    <button class="share-close" style="margin-top:10px;" onclick="closePvp()">✕ ยกเลิก</button>
+  </div>
+</div>
+
+<!-- ═══ MAP EVENT CONFIRM OVERLAY ═══ -->
+<div id="map-confirm-overlay" style="position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.9);backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;">
+  <div style="background:var(--bg3);border:1px solid var(--amber);border-radius:16px;padding:24px;max-width:400px;width:92%;text-align:center;box-shadow:0 0 40px rgba(200,134,26,0.4);">
+    <div id="map-confirm-title" style="font-family:'Cinzel',serif;font-size:20px;color:var(--amber2);margin-bottom:12px;">สำรวจพื้นที่พิเศษ?</div>
+    <div id="map-confirm-desc" style="font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.6;"></div>
+    <div style="display:flex;gap:10px;">
+      <button class="screen-btn" style="flex:1;background:var(--red);color:#fff;" id="map-confirm-yes">ฝืนเข้าไป</button>
+      <button class="screen-btn" style="flex:1;background:var(--bg4);color:var(--text3);border:1px solid var(--border);" onclick="closeMapConfirm()">ยกเลิก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MAIN APP ═══ -->
+<div id="app">
+
+  <!-- HEADER -->
+  <div id="header">
+    <div id="header-logo">🌲 LOST IN FOREST</div>
+    <div id="header-right">
+      <div id="turn-timer" style="font-family:monospace;font-size:18px;color:var(--amber2);background:var(--bg2);padding:2px 10px;border-radius:5px;border:1px solid var(--border);margin-right:10px;display:none;">03:00</div>
+      <div id="week-progress"></div>
+      <div id="day-badge">วันที่ 1 / 7</div>
+    </div>
+  </div>
+
+  <!-- 3-COLUMN GRID -->
+  <div id="main-grid">
+
+    <!-- LEFT: Player 0 & 1 -->
+    <div class="players-col">
+      <div id="panel-p0" class="player-panel"></div>
+      <div id="panel-p1" class="player-panel"></div>
+    </div>
+
+    <!-- CENTER -->
+    <div id="center-panel">
+
+      <!-- Turn Header -->
+      <div id="turn-header">
+        <div>
+          <div id="turn-player-name">—</div>
+          <div id="turn-class-name" style="font-size:10px;color:var(--text3);margin-top:1px;">รอเริ่มเกม</div>
+        </div>
+        <div id="turn-time-left" style="text-align:right;">
+          <div style="font-size:14px;font-weight:700;" id="turn-hours">24</div>
+          <div style="font-size:9px;color:var(--text3);">ชม.เหลือ</div>
+        </div>
+      </div>
+
+      <!-- Story Box -->
+      <div id="story-box"></div>
+
+      <!-- Shared Camp Box -->
+      <div class="side-box" id="camp-box" style="margin-top:2px;background:rgba(16, 22, 20, 0.85);border:1px dashed var(--green2);border-radius:10px;padding:10px;box-shadow:var(--shadow);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <span style="font-size:12px;font-weight:700;color:var(--green2);display:flex;align-items:center;gap:4px;">⛺ ค่ายพักแรมส่วนกลาง <span id="camp-level-badge" style="font-size:9px;background:var(--bg4);border:1px solid var(--border);padding:1px 5px;border-radius:10px;color:var(--amber2)">Lv. 1 ค่ายชั่วคราว</span></span>
+          <button class="screen-btn" style="padding:3px 8px;font-size:10px;margin:0;border-radius:5px;" onclick="openCampMenu()">🛠️ จัดการแคมป์</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:6px;" id="camp-structures-list">
+          <div style="font-size:10px;color:var(--text3);text-align:center;padding:4px;background:var(--bg2);border:0.5px solid var(--border);border-radius:5px;">🔥 ไม่มีกองไฟ</div>
+          <div style="font-size:10px;color:var(--text3);text-align:center;padding:4px;background:var(--bg2);border:0.5px solid var(--border);border-radius:5px;">🛖 ไม่มีกระท่อม</div>
+          <div style="font-size:10px;color:var(--text3);text-align:center;padding:4px;background:var(--bg2);border:0.5px solid var(--border);border-radius:5px;">🪵 ไม่มีรั้วไม้</div>
+        </div>
+        <div style="font-size:10px;color:var(--text2);display:flex;align-items:center;gap:6px;">
+          <span style="font-weight:700;flex-shrink:0;">📦 คลังแคมป์:</span>
+          <div id="camp-shared-items" style="display:flex;gap:3px;flex-wrap:wrap;overflow-x:auto;">
+            <span style="color:var(--text3);font-style:italic;">ว่างเปล่า</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Location Cards -->
+      <div id="locations-row"></div>
+
+      <!-- Actions Area -->
+      <div id="actions-area">
+        <div id="actions-label">🎯 การกระทำ</div>
+        <div id="action-buttons"></div>
+        <div id="custom-row">
+          <input id="custom-in" type="text" placeholder="พิมพ์การกระทำของตัวเอง..." />
+          <button id="send-custom" onclick="sendCustomAction()">ส่ง</button>
+          <button id="end-turn-btn" onclick="endPlayerTurn(G.currentPlayer)">จบเทิร์น</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: Player 2, 3 + World -->
+    <div id="world-panel">
+      <div id="panel-p2" class="player-panel"></div>
+      <div id="panel-p3" class="player-panel"></div>
+
+      <div class="side-box">
+        <div class="side-title">🌦 สภาพอากาศ</div>
+        <div id="weather-box">
+          <div class="weather-icon" id="weather-icon">⛅</div>
+          <div class="weather-text" id="weather-text">ท้องฟ้าครึ้ม</div>
+        </div>
+      </div>
+
+      <div class="side-box">
+        <div class="side-title">⚠️ เหตุการณ์วันนี้</div>
+        <div id="daily-event-box" style="font-size:10px;color:var(--text2);line-height:1.5;">—</div>
+      </div>
+
+      <div class="side-box">
+        <div class="side-title">🐾 สัตว์ป่า</div>
+        <div id="wildlife-log"><div style="font-size:10px;color:var(--text3);">ยังไม่พบสัตว์ใด</div></div>
+      </div>
+
+      <div class="side-box">
+        <div class="side-title">🔨 คราฟของใช้</div>
+        <div id="craft-list"></div>
+      </div>
+    </div>
+
+  </div><!-- /main-grid -->
+</div><!-- /app -->
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="events.js" defer></script>
+<script src="game.js" defer></script>
+
+</body>
+</html>
