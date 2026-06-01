@@ -618,7 +618,7 @@ let G = {
 function getMyPlayerIndex() {
   if (!socket || G.mode !== 'multi' || !G.players) return 0;
   const idx = G.players.findIndex(p => p.id === socket.id);
-  return idx !== -1 ? idx : 0;
+  return idx !== -1 ? idx : -1;
 }
 
 function syncStateToAll() {
@@ -652,8 +652,9 @@ function recordRescueAttempt(pi, chance) {
 }
 
 function startTurnTimer() {
-  clearInterval(G.turnTimer);
   const myPi = getMyPlayerIndex();
+  if (myPi === -1) return;
+  clearInterval(G.turnTimer);
   if (G.currentPlayer !== myPi) {
     document.getElementById('turn-timer').style.display = 'none';
     return;
@@ -781,6 +782,8 @@ window.startCharacterSequence = startCharacterSequence;
 
 function initGameMultiplayer(roomData) {
   try {
+    G.mode = 'multi';
+    G.isHost = !!(roomData.players.find(p => p.id === socket?.id)?.isHost);
     const keyInput = document.getElementById('api-key-input');
     if (keyInput && keyInput.value.trim()) {
       localStorage.setItem('anthropic_api_key', keyInput.value.trim());
@@ -1108,58 +1111,60 @@ function startTurn(pi) {
     const p = G.players[pi];
     if (!p.alive) { nextTurn(); return; }
 
-    // hunger/energy/thirst/sanity decay
-    const hungerLoss = G.activeEvent.noDecay ? 0 : 8 + (G.activeEvent.extraHungerDecay || 0);
-    const energyLoss = G.activeEvent.noDecay ? 0 : 5 + (G.activeEvent.extraEnergyDecay || 0);
-    const thirstLoss = G.activeEvent.noDecay ? 0 : 10 + (G.weather.icon === '☀️' ? 10 : 0) + (G.activeEvent.extraHungerDecay ? 5 : 0);
-    const sanityLoss = (G.activeEvent.noDecay || G.camp.structures.includes('fortified')) ? 0 : 5;
-    
-    p.hunger = clamp(p.hunger - hungerLoss, 0, 100);
-    p.energy = clamp(p.energy - energyLoss, 0, 100);
-    p.thirst = clamp(p.thirst - thirstLoss, 0, 100);
-    p.sanity = clamp(p.sanity - sanityLoss, 0, 100);
-    
-    if (p.hunger <= 20) p.statuses = addStatus(p.statuses, 'hungry');
-    else p.statuses = p.statuses.filter(s => s !== 'hungry');
-    
-    if (p.energy <= 15) p.statuses = addStatus(p.statuses, 'tired');
-    else p.statuses = p.statuses.filter(s => s !== 'tired');
-    
-    if (p.thirst <= 20) p.statuses = addStatus(p.statuses, 'thirsty');
-    else p.statuses = p.statuses.filter(s => s !== 'thirsty');
+    if (!socket || G.isHost || G.mode !== 'multi') {
+      // hunger/energy/thirst/sanity decay
+      const hungerLoss = G.activeEvent.noDecay ? 0 : 8 + (G.activeEvent.extraHungerDecay || 0);
+      const energyLoss = G.activeEvent.noDecay ? 0 : 5 + (G.activeEvent.extraEnergyDecay || 0);
+      const thirstLoss = G.activeEvent.noDecay ? 0 : 10 + (G.weather.icon === '☀️' ? 10 : 0) + (G.activeEvent.extraHungerDecay ? 5 : 0);
+      const sanityLoss = (G.activeEvent.noDecay || G.camp.structures.includes('fortified')) ? 0 : 5;
+      
+      p.hunger = clamp(p.hunger - hungerLoss, 0, 100);
+      p.energy = clamp(p.energy - energyLoss, 0, 100);
+      p.thirst = clamp(p.thirst - thirstLoss, 0, 100);
+      p.sanity = clamp(p.sanity - sanityLoss, 0, 100);
+      
+      if (p.hunger <= 20) p.statuses = addStatus(p.statuses, 'hungry');
+      else p.statuses = p.statuses.filter(s => s !== 'hungry');
+      
+      if (p.energy <= 15) p.statuses = addStatus(p.statuses, 'tired');
+      else p.statuses = p.statuses.filter(s => s !== 'tired');
+      
+      if (p.thirst <= 20) p.statuses = addStatus(p.statuses, 'thirsty');
+      else p.statuses = p.statuses.filter(s => s !== 'thirsty');
 
-    if (p.sanity <= 30) {
-      p.statuses = addStatus(p.statuses, 'paranoid');
-      if (p.isBot && Math.random() < 0.3) {
-        addMsg(`😱 ${p.name} เริ่มมีอาการคลั่งเพราะค่าสติ (Sanity) ต่ำ!`, 'bubble-event-bad');
+      if (p.sanity <= 30) {
+        p.statuses = addStatus(p.statuses, 'paranoid');
+        if (p.isBot && Math.random() < 0.3) {
+          addMsg(`😱 ${p.name} เริ่มมีอาการคลั่งเพราะค่าสติ (Sanity) ต่ำ!`, 'bubble-event-bad');
+        }
+      } else {
+        p.statuses = p.statuses.filter(s => s !== 'paranoid');
       }
-    } else {
-      p.statuses = p.statuses.filter(s => s !== 'paranoid');
-    }
 
-    if (p.thirst <= 0) {
-      p.hp = clamp(p.hp - 10, 0, 100);
-      addMsg(`💧 ${p.name} ขาดน้ำรุนแรง! — HP -10`, 'bubble-event-bad');
-    }
-
-    if (G.activeEvent.acidRain && !p.atCamp) {
-      p.hp = clamp(p.hp - 5, 0, 100);
-      addMsg(`🌧️ ฝนกรดกัดกร่อน! ${p.name} เสีย HP -5`, 'bubble-event-bad');
-    }
-
-    // Apply wet status effect: 20% chance to become sick (prevented by wetResist) (Bug 16)
-    if (p.statuses.includes('wet')) {
-      if (!G.activeEvent.wetResist && Math.random() < 0.20) {
-        p.statuses = addStatus(p.statuses, 'sick');
-        addMsg(`🤒 เพราะตัวเปียกปอนและหนาวเหน็บ ${p.name} จึงล้มป่วยเป็นไข้ป่า!`, 'bubble-event-bad');
+      if (p.thirst <= 0) {
+        p.hp = clamp(p.hp - 10, 0, 100);
+        addMsg(`💧 ${p.name} ขาดน้ำรุนแรง! — HP -10`, 'bubble-event-bad');
       }
+
+      if (G.activeEvent.acidRain && !p.atCamp) {
+        p.hp = clamp(p.hp - 5, 0, 100);
+        addMsg(`🌧️ ฝนกรดกัดกร่อน! ${p.name} เสีย HP -5`, 'bubble-event-bad');
+      }
+
+      // Apply wet status effect: 20% chance to become sick (prevented by wetResist) (Bug 16)
+      if (p.statuses.includes('wet')) {
+        if (!G.activeEvent.wetResist && Math.random() < 0.20) {
+          p.statuses = addStatus(p.statuses, 'sick');
+          addMsg(`🤒 เพราะตัวเปียกปอนและหนาวเหน็บ ${p.name} จึงล้มป่วยเป็นไข้ป่า!`, 'bubble-event-bad');
+        }
+      }
+
+      // Apply poison/sick effects
+      if (p.statuses.includes('poison')) { p.hp = clamp(p.hp - 15, 0, 100); addMsg(`☠️ ${p.name} ได้รับพิษ — HP -15`, 'bubble-event-bad'); }
+      if (p.statuses.includes('sick'))   { p.hp = clamp(p.hp - 8, 0, 100);  p.energy = clamp(p.energy-10,0,100); addMsg(`🤒 ${p.name} กำลังป่วย — HP -8, พลังงาน -10`, 'bubble-event-bad'); }
+
+      if (p.hp <= 0) { killPlayer(pi); return; }
     }
-
-    // Apply poison/sick effects
-    if (p.statuses.includes('poison')) { p.hp = clamp(p.hp - 15, 0, 100); addMsg(`☠️ ${p.name} ได้รับพิษ — HP -15`, 'bubble-event-bad'); }
-    if (p.statuses.includes('sick'))   { p.hp = clamp(p.hp - 8, 0, 100);  p.energy = clamp(p.energy-10,0,100); addMsg(`🤒 ${p.name} กำลังป่วย — HP -8, พลังงาน -10`, 'bubble-event-bad'); }
-
-    if (p.hp <= 0) { killPlayer(pi); return; }
 
     renderAllPanels();
     updateTurnHeader(pi);
@@ -1759,6 +1764,7 @@ function endPlayerTurn(pi) {
   }
   G.dayDone[pi] = true;
   addMsg(`⏰ ${p.name} จบเทิร์นแล้ว`, 'bubble-system');
+  syncStateToAll();
   nextTurn();
 }
 
@@ -2567,12 +2573,7 @@ function spendTime(pi, hours) {
 function nextTurn() {
   const next = G.players.findIndex((p,i) => p.alive && !G.dayDone[i]);
   if (next === -1) {
-    if (G.mode === 'multi') {
-      addMsg('⌛ รอผู้เล่นคนอื่นทำเทิร์นให้เสร็จ... (โหมดจำลองออนไลน์)', 'bubble-system');
-      setTimeout(() => endDay(), 2000);
-    } else {
-      endDay();
-    }
+    endDay();
   } else {
     G.currentPlayer = next;
     renderAllPanels();
@@ -2804,6 +2805,7 @@ const CAMP_RECIPES = [
 
 function openCampMenu() {
   const pi = getMyPlayerIndex(); // Always show user's inventory when they open the menu
+  if (pi === -1) return;
   const p = G.players[pi];
   const isHumanTurn = (G.currentPlayer === pi);
   if (!p || !p.alive) return;
@@ -2967,6 +2969,7 @@ function handleDrop(event) {
 }
 
 function takeFromCamp(pi, idx) {
+  if (pi === -1) return;
   if (sendClientAction('withdraw', pi, idx)) return;
   const p = G.players[pi];
   if (!p.alive || G.isLoading) return;
@@ -2981,6 +2984,7 @@ function takeFromCamp(pi, idx) {
 }
 
 function depositToCamp(pi, itemIdx) {
+  if (pi === -1) return;
   if (sendClientAction('deposit', pi, itemIdx)) return;
   const p = G.players[pi];
   if (!p.atCamp) { addMsg('❌ ต้องอยู่ที่แคมป์เพื่อฝากของ', 'bubble-system'); return; }
@@ -3430,6 +3434,10 @@ function addMsg(text, cls) {
   msgDiv.appendChild(bubble);
   area.appendChild(msgDiv);
   area.scrollTop = area.scrollHeight;
+
+  if (socket && G.mode === 'multi' && G.isHost) {
+    socket.emit('broadcastMessage', { roomCode: G.roomCode, text, cls });
+  }
 }
 
 function showTyping() {
