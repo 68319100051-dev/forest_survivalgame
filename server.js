@@ -2,7 +2,6 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
-const fetch = require('node-fetch'); // NOTE: Assuming node-fetch is available or needs to be installed
 
 const app = express();
 app.use(express.json());
@@ -100,7 +99,8 @@ io.on('connection', (socket) => {
         };
         room.players.push(newPlayer);
         socket.join(data.roomCode);
-        io.to(data.roomCode).emit('playerJoined', room);
+        socket.emit('joinedRoom', room); // Send room data specifically to the new player
+        io.to(data.roomCode).emit('updateLobby', room);
         console.log(`${newPlayer.name} joined room: ${data.roomCode}`);
     });
 
@@ -149,24 +149,54 @@ io.on('connection', (socket) => {
         }
     });
 
+// Helper to initialize server-side Game State (G) for a multiplayer room
+function initializeMultiplayerState(roomCode, players) {
+    return {
+        mode: 'multi',
+        isHost: true,
+        roomCode: roomCode,
+        day: 1,
+        currentPlayer: 0,
+        players: players.map((p, i) => ({
+            id: p.id,
+            name: p.name,
+            hp: 100, hunger: 80, thirst: 100, energy: 100, sanity: 100,
+            inventory: [],
+            statuses: [],
+            alive: true,
+            atCamp: true,
+            job: p.job,
+            stats: { itemsCrafted: 0, itemsShared: 0, animalsDefeated: 0, damageTaken: 0, dayDied: null, actionsTaken: 0 }
+        })),
+        locations: [],
+        weather: null,
+        camp: { structures: [], sharedItems: [], level: 1 },
+        rescueData: { attempts: [], lastChance: 0, success: false }
+    };
+}
+
+// ... existing socket.on('startGame', ...) ...
     socket.on('startGame', (data) => {
         const room = rooms.get(data.roomCode);
         if (!room || socket.id !== room.host) return;
         
         const allReady = room.players.every(p => p.ready);
         if (allReady && room.players.length === 4) {
-            // Shuffle jobs and assign to players unique ones
             const shuffledJobs = [...SERVER_JOBS].sort(() => Math.random() - 0.5);
             room.players.forEach((player, index) => {
                 player.job = shuffledJobs[index];
                 player.confirmedJob = false;
                 if (player.isBot) {
-                    player.confirmedJob = true; // Bots are immediately confirmed!
+                    player.confirmedJob = true;
                 }
             });
             room.gameState = 'character_select';
+            
+            // Initialize server-side G state
+            room.G = initializeMultiplayerState(data.roomCode, room.players);
+            
             io.to(data.roomCode).emit('gameStarted', room);
-            console.log(`Game starting in room ${data.roomCode}. Unique jobs pre-assigned.`);
+            console.log(`Game starting in room ${data.roomCode}. Server-side state initialized.`);
         }
     });
 
@@ -194,29 +224,51 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Synchronize Actions
-    socket.on('gameAction', (data) => {
+    // Relay Handlers for Host-Relay Multiplayer
+    socket.on('hostSyncState', (data) => {
         const room = rooms.get(data.roomCode);
-        if (!room) return;
-        // Broadcast action to all other players in the room
-        socket.to(data.roomCode).emit('syncAction', data);
+        if (room) {
+            room.G = data.G; // Keep the last state for host migration
+            socket.to(data.roomCode).emit('gameStateUpdate', { G: data.G });
+        }
     });
 
+    socket.on('broadcastMessage', (data) => {
+        socket.to(data.roomCode).emit('broadcastMessage', { text: data.text, cls: data.cls });
+    });
+
+    socket.on('broadcastTyping', (data) => {
+        socket.to(data.roomCode).emit('broadcastTyping', { show: data.show });
+    });
+
+    socket.on('clientAction', (data) => {
+        const room = rooms.get(data.roomCode);
+        if (room && room.host) {
+            io.to(room.host).emit('handleClientAction', {
+                action: data.action,
+                args: data.args
+            });
+        }
+    });
+
+
     socket.on('disconnect', () => {
-        console.log('User disconnected:', socket.id);
-        // Handle player leaving room
         rooms.forEach((room, code) => {
             const index = room.players.findIndex(p => p.id === socket.id);
             if (index !== -1) {
+                const isHost = (socket.id === room.host);
                 room.players.splice(index, 1);
-                if (socket.id === room.host) {
-                    if (room.players.length > 0 && !room.players[0].isBot) {
-                        room.host = room.players[0].id;
-                        room.players[0].isHost = true;
-                        io.to(code).emit('updateLobby', room);
-                    } else {
-                        rooms.delete(code);
-                    }
+                
+                if (isHost && room.players.length > 0) {
+                    // Host Migration
+                    const newHost = room.players[0];
+                    room.host = newHost.id;
+                    newHost.isHost = true;
+                    // Transfer state and notify new host
+                    io.to(newHost.id).emit('hostChanged', room.G);
+                    io.to(code).emit('updateLobby', room);
+                } else if (room.players.length === 0) {
+                    rooms.delete(code);
                 } else {
                     io.to(code).emit('updateLobby', room);
                 }

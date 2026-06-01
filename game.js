@@ -128,6 +128,53 @@ function getDailyEvent() {
 const socket = typeof io !== 'undefined' ? io() : null;
 
 if (socket) {
+  socket.on('gameStateUpdate', (data) => {
+    if (G.mode === 'multi') {
+      const wasMyTurn = (G.players[G.currentPlayer] && G.players[G.currentPlayer].id === socket.id);
+      
+      G = data.G;
+      
+      // Update UI panels
+      renderAllPanels();
+      updateCampUI();
+      buildCraftList();
+      renderLocations();
+      
+      // Update turn headers and overlay locking
+      updateTurnHeader(G.currentPlayer);
+      
+      const isMyTurn = (G.players[G.currentPlayer] && G.players[G.currentPlayer].id === socket.id);
+      if (isMyTurn) {
+        renderActions(G.currentPlayer);
+        if (!wasMyTurn) {
+          addMsg(`🎮 ตาของคุณแล้ว! เลือกการกระทำของคุณ (${G.players[G.currentPlayer].hoursLeft} ชม. เหลือ)`, 'bubble-system');
+        }
+      } else {
+        // Clear buttons area
+        const container = document.getElementById('action-buttons');
+        if (container) container.innerHTML = '';
+      }
+
+      // Update combat overlay visibility based on combatState
+      const combatOverlay = document.getElementById('combat-overlay');
+      if (combatOverlay) {
+        if (G.combatState) {
+          combatOverlay.style.display = 'flex';
+          renderCombatScreen();
+        } else {
+          combatOverlay.style.display = 'none';
+        }
+      }
+    }
+  });
+
+  socket.on('joinedRoom', (roomData) => {
+    G.lobbyPlayers = roomData.players;
+    G.roomCode = roomData.code;
+    toggleLobbyControls('player');
+    renderLobbyPlayers();
+  });
+
   socket.on('roomCreated', (roomData) => {
     G.roomCode = roomData.code;
     G.lobbyPlayers = roomData.players;
@@ -176,23 +223,89 @@ if (socket) {
   socket.on('error', (msg) => {
     alert(msg);
   });
-  
-  // Real-time Action Sync
-  socket.on('syncAction', (data) => {
-    console.log('Action received:', data);
-    const { actionType, pi, payload } = data;
-    
-    switch(actionType) {
+
+  socket.on('broadcastMessage', (data) => {
+    if (G.mode === 'multi' && !G.isHost) {
+      addMsg(data.text, data.cls);
+    }
+  });
+
+  socket.on('broadcastTyping', (data) => {
+    if (G.mode === 'multi' && !G.isHost) {
+      if (data.show) showTyping();
+      else removeTyping();
+    }
+  });
+
+  socket.on('handleClientAction', (data) => {
+    if (G.mode === 'multi' && G.isHost) {
+      const { action, args } = data;
+      console.log('Host processing client action:', action, args);
+      
+      switch(action) {
+        case 'handleAction':
+          handleAction(args[0], args[1]);
+          break;
         case 'explore':
-            // Handle remote explore action
-            // Need to make sure the state is updated and UI is refreshed
-            // This is complex, will need a robust state sync strategy
-            break;
-        case 'endTurn':
-            // Remote player ended turn
-            nextTurn();
-            break;
-        // Add other cases ...
+          exploreLocation(args[0], args[1]);
+          break;
+        case 'exploreMapEvent':
+          exploreMapEvent(args[0]);
+          break;
+        case 'share':
+          doShare(args[0], args[1], args[2]);
+          break;
+        case 'craft':
+          doCraft(args[0], args[1]);
+          break;
+        case 'pvp':
+          selectPvpTarget(args[0], args[1], args[2]);
+          break;
+        case 'cook':
+          doCookFood(args[0], args[1], args[2], args[3], args[4]);
+          break;
+        case 'build':
+          doBuildCampStructure(args[0], args[1], args[2]);
+          break;
+        case 'deposit':
+          depositToCamp(args[0], args[1]);
+          break;
+        case 'withdraw':
+          takeFromCamp(args[0], args[1]);
+          break;
+        case 'combatRound':
+          doCombatRound(args[0], args[1]);
+          break;
+        case 'endPlayerTurn':
+          endPlayerTurn(args[0]);
+          break;
+        default:
+          console.error('Unknown action received by host:', action);
+      }
+    }
+  });
+
+  socket.on('hostChanged', (savedG) => {
+    G.isHost = true;
+    if (savedG) {
+      G = savedG;
+    }
+    addMsg('👑 คุณได้รับเลือกเป็นหัวหน้าห้องคนใหม่ (Host) ระบบประสานข้อมูลได้รับการโอนย้ายแล้ว', 'bubble-system');
+    socket.emit('hostSyncState', { roomCode: G.roomCode, G });
+    
+    renderAllPanels();
+    updateCampUI();
+    buildCraftList();
+    renderLocations();
+    updateTurnHeader(G.currentPlayer);
+    if (G.currentPlayer !== -1 && G.players[G.currentPlayer]) {
+      const isMyTurn = (G.players[G.currentPlayer].id === socket.id);
+      if (isMyTurn) {
+        renderActions(G.currentPlayer);
+      } else {
+        const container = document.getElementById('action-buttons');
+        if (container) container.innerHTML = '';
+      }
     }
   });
 }
@@ -502,6 +615,27 @@ let G = {
   secondsLeft: 180
 };
 
+function getMyPlayerIndex() {
+  if (!socket || G.mode !== 'multi' || !G.players) return 0;
+  const idx = G.players.findIndex(p => p.id === socket.id);
+  return idx !== -1 ? idx : 0;
+}
+
+function syncStateToAll() {
+  if (socket && G.mode === 'multi' && G.isHost) {
+    socket.emit('hostSyncState', { roomCode: G.roomCode, G });
+  }
+}
+
+function sendClientAction(action, ...args) {
+  if (socket && G.mode === 'multi' && !G.isHost) {
+    socket.emit('clientAction', { roomCode: G.roomCode, action, args });
+    return true;
+  }
+  return false;
+}
+
+
 function adjustTrust(pi, delta, reason) {
   const p = G.players[pi];
   if (!p) return;
@@ -519,7 +653,8 @@ function recordRescueAttempt(pi, chance) {
 
 function startTurnTimer() {
   clearInterval(G.turnTimer);
-  if (G.currentPlayer !== 0) {
+  const myPi = getMyPlayerIndex();
+  if (G.currentPlayer !== myPi) {
     document.getElementById('turn-timer').style.display = 'none';
     return;
   }
@@ -537,7 +672,7 @@ function startTurnTimer() {
     if (G.secondsLeft <= 0) {
       clearInterval(G.turnTimer);
       addMsg('⌛ หมดเวลาเทิร์นของคุณแล้ว!', 'bubble-system');
-      endPlayerTurn(0);
+      endPlayerTurn(getMyPlayerIndex());
     }
   }, 1000);
 }
@@ -1031,12 +1166,15 @@ function startTurn(pi) {
     renderActions(pi);
     addMsg(`🎮 ตาของ ${p.name} — ${p.hoursLeft} ชม. เหลือ`, 'bubble-system');
     
-    if (pi === 0) startTurnTimer();
+    const myPi = getMyPlayerIndex();
+    if (pi === myPi) startTurnTimer();
     else stopTurnTimer();
 
     // ถ้าเป็นบอท ให้เล่นอัตโนมัติหลังจากหน่วงเวลา
     if (p.isBot) {
-      setTimeout(() => botChooseAction(pi), 1500 + Math.random() * 1000);
+      if (!socket || G.isHost) {
+        setTimeout(() => botChooseAction(pi), 1500 + Math.random() * 1000);
+      }
     }
   } catch(err) {
     console.error('Error in startTurn:', err);
@@ -1057,8 +1195,8 @@ function updateTurnHeader(pi) {
     el.classList.toggle('active', i === pi);
   });
 
-  // Gray-out overlay controls if it's bot's turn (pi !== 0)
-  const isUser = (pi === 0);
+  // Gray-out overlay controls if it's not my turn
+  const isUser = (pi === getMyPlayerIndex());
   const elementsToOverlay = [
     document.getElementById('locations-row'),
     document.getElementById('actions-area'),
@@ -1170,7 +1308,9 @@ function updateCraftBadge(pi) {
 }
 
 function handleAction(pi, action) {
+  if (sendClientAction('handleAction', pi, action)) return;
   if (G.isLoading) return;
+
   const p = G.players[pi];
   
   // Set global loading state to prevent spam clicking
@@ -1609,6 +1749,7 @@ function botCampAction(pi) {
 }
 
 function endPlayerTurn(pi) {
+  if (sendClientAction('endPlayerTurn', pi)) return;
   stopTurnTimer();
   const p = G.players[pi];
   if (!p.atCamp) {
@@ -1791,6 +1932,7 @@ function showLocationPicker(pi) {
 }
 
 function exploreLocation(pi, li) {
+  if (sendClientAction('explore', pi, li)) return;
   const p = G.players[pi];
   const loc = G.locations[li];
   if (!loc || loc.explored.includes(pi)) return;
@@ -1834,6 +1976,7 @@ function exploreLocation(pi, li) {
 }
 
 function exploreMapEvent(pi) {
+  if (sendClientAction('exploreMapEvent', pi)) return;
   const p = G.players[pi];
   const m = G.mapEvent;
   if (!m || m.explored) return;
@@ -2299,6 +2442,7 @@ function renderCombatScreen() {
 }
 
 function doCombatRound(action, playerDmg) {
+  if (sendClientAction('combatRound', action, playerDmg)) return;
   if (!G.combatState) return;
   const cs = G.combatState;
   const p = G.players[cs.playerIndex];
@@ -2659,9 +2803,9 @@ const CAMP_RECIPES = [
 ];
 
 function openCampMenu() {
-  const pi = 0; // Always show user's inventory when they open the menu
+  const pi = getMyPlayerIndex(); // Always show user's inventory when they open the menu
   const p = G.players[pi];
-  const isHumanTurn = (G.currentPlayer === 0);
+  const isHumanTurn = (G.currentPlayer === pi);
   if (!p || !p.alive) return;
 
   const hasFire = G.camp.structures.includes('campfire') || G.camp.structures.includes('stove');
@@ -2727,6 +2871,7 @@ function openCampMenu() {
 }
 
 function doCookFood(pi, inputItem, outputItem, hungerGain, hpGain) {
+  if (sendClientAction('cook', pi, inputItem, outputItem, hungerGain, hpGain)) return;
   const p = G.players[pi];
   const idx = p.inventory.indexOf(inputItem);
   if (idx === -1) { addMsg('❌ ไม่มีวัตถุดิบ', 'bubble-system'); return; }
@@ -2743,6 +2888,7 @@ function doCookFood(pi, inputItem, outputItem, hungerGain, hpGain) {
 }
 
 function doBuildCampStructure(pi, structId, structName) {
+  if (sendClientAction('build', pi, structId, structName)) return;
   const p = G.players[pi];
   if (!p.atCamp) { addMsg('❌ ต้องอยู่ที่แคมป์เพื่อสร้างสิ่งปลูกสร้าง', 'bubble-system'); return; }
   const s = CAMP_STRUCTURES.find(x => x.id === structId);
@@ -2807,7 +2953,7 @@ function updateCampUI() {
       sharedEl.innerHTML = '<span style="color:var(--text3);font-style:italic;">ว่างเปล่า (วางของที่นี่)</span>';
     } else {
       sharedEl.innerHTML = G.camp.sharedItems.map((item, idx) =>
-        `<span style="font-size:10px;padding:2px 5px;background:var(--bg4);border:0.5px solid var(--border);border-radius:3px;color:var(--text2);cursor:pointer;" onclick="takeFromCamp(${idx})">${item}</span>`
+        `<span style="font-size:10px;padding:2px 5px;background:var(--bg4);border:0.5px solid var(--border);border-radius:3px;color:var(--text2);cursor:pointer;" onclick="takeFromCamp(${getMyPlayerIndex()}, ${idx})">${item}</span>`
       ).join('');
     }
   }
@@ -2817,11 +2963,11 @@ function updateCampUI() {
 function handleDrop(event) {
   event.preventDefault();
   const itemIdx = event.dataTransfer.getData('text/plain');
-  depositToCamp(G.currentPlayer, parseInt(itemIdx));
+  depositToCamp(getMyPlayerIndex(), parseInt(itemIdx));
 }
 
-function takeFromCamp(idx) {
-  const pi = G.currentPlayer;
+function takeFromCamp(pi, idx) {
+  if (sendClientAction('withdraw', pi, idx)) return;
   const p = G.players[pi];
   if (!p.alive || G.isLoading) return;
   if (!p.atCamp) { addMsg('❌ ต้องอยู่ที่แคมป์เพื่อหยิบของ', 'bubble-system'); return; }
@@ -2835,6 +2981,7 @@ function takeFromCamp(idx) {
 }
 
 function depositToCamp(pi, itemIdx) {
+  if (sendClientAction('deposit', pi, itemIdx)) return;
   const p = G.players[pi];
   if (!p.atCamp) { addMsg('❌ ต้องอยู่ที่แคมป์เพื่อฝากของ', 'bubble-system'); return; }
   
@@ -2872,6 +3019,7 @@ function showShareOverlay(pi) {
 }
 
 function doShare(fromPi, toPi, item) {
+  if (sendClientAction('share', fromPi, toPi, item)) return;
   closeShare();
   const from = G.players[fromPi];
   const to = G.players[toPi];
@@ -2999,6 +3147,7 @@ function closePvp() {
 }
 
 function selectPvpTarget(fromPi, toPi, method) {
+  if (sendClientAction('pvp', fromPi, toPi, method)) return;
   closePvp();
   const attacker = G.players[fromPi];
   const target = G.players[toPi];
@@ -3064,6 +3213,7 @@ function showCraftPicker(pi) {
 }
 
 function doCraft(pi, itemName) {
+  if (sendClientAction('craft', pi, itemName)) return;
   const p = G.players[pi];
   const c = CRAFTS.find(x=>x.name===itemName);
   if (!c) return;
@@ -3113,7 +3263,9 @@ function doCraft(pi, itemName) {
 // ===================== RENDER =====================
 function renderAllPanels() {
   G.players.forEach((p,i) => renderPanel(i));
+  syncStateToAll();
 }
+
 
 function renderPanel(i) {
   const p = G.players[i];
@@ -3123,8 +3275,10 @@ function renderPanel(i) {
     ? p.statuses.map(s=>`<span class="status-tag tag-${s}">${statusLabel(s)}</span>`).join('')
     : '<span class="status-tag tag-dead">☠️ เสียชีวิต</span>';
 
-  const isHuman = (i === 0);
-  const humanIsSpy = (G.players[0] && G.players[0].job && G.players[0].job.id === 'spy');
+  const myIndex = getMyPlayerIndex();
+  const isHuman = (G.mode === 'multi') ? (p.id === socket?.id) : (i === 0);
+  const humanIsSpy = (G.players[myIndex] && G.players[myIndex].job && G.players[myIndex].job.id === 'spy');
+
   const shouldReveal = isHuman || humanIsSpy || !p.alive;
   
   let invHTML = '';
@@ -3154,7 +3308,7 @@ function renderPanel(i) {
         draggable="true" 
         ondragstart="event.dataTransfer.setData('text/plain', '${idx}')"
         onclick="showItemInfo('${item.replace(/'/g, "\\'")}')" 
-        oncontextmenu="if(${canDeposit}){depositToCamp(0, ${idx});return false;}">
+        oncontextmenu="if(${canDeposit}){depositToCamp(${i}, ${idx});return false;}">
         ${item}${isUsedInCraftable ? '<div class="craft-badge" style="width:6px;height:6px;top:0;right:0;"></div>' : ''}
       </span>`;
     }).join('');
