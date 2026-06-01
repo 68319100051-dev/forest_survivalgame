@@ -250,7 +250,7 @@ if (socket) {
           exploreLocation(args[0], args[1]);
           break;
         case 'exploreMapEvent':
-          exploreMapEvent(args[0]);
+          doExploreMapEvent(args[0], args[1], args[2], args[3]);
           break;
         case 'share':
           doShare(args[0], args[1], args[2]);
@@ -1313,7 +1313,10 @@ function updateCraftBadge(pi) {
 }
 
 function handleAction(pi, action) {
-  if (sendClientAction('handleAction', pi, action)) return;
+  const uiActions = ['cookcamp', 'explore', 'share', 'craft', 'pvp'];
+  if (!uiActions.includes(action)) {
+    if (sendClientAction('handleAction', pi, action)) return;
+  }
   if (G.isLoading) return;
 
   const p = G.players[pi];
@@ -1982,7 +1985,6 @@ function exploreLocation(pi, li) {
 }
 
 function exploreMapEvent(pi) {
-  if (sendClientAction('exploreMapEvent', pi)) return;
   const p = G.players[pi];
   const m = G.mapEvent;
   if (!m || m.explored) return;
@@ -1998,12 +2000,12 @@ function exploreMapEvent(pi) {
   }
 
   if (p.hoursLeft < hoursCost) {
-    if (pi === 0) addMsg(`⏰ เวลาไม่พอสำรวจ ${m.name} (ต้องการ ${hoursCost} ชม.)`, 'bubble-system');
+    if (pi === getMyPlayerIndex()) addMsg(`⏰ เวลาไม่พอสำรวจ ${m.name} (ต้องการ ${hoursCost} ชม.)`, 'bubble-system');
     return;
   }
 
   const hasItem = p.inventory.includes(m.requiredItem);
-  if (pi === 0 && !hasItem) {
+  if (pi === getMyPlayerIndex() && !hasItem) {
     showMapConfirm(pi, m, hoursCost);
     return;
   }
@@ -2028,6 +2030,7 @@ function closeMapConfirm() {
 }
 
 function doExploreMapEvent(pi, m, hoursCost, hasItem) {
+  if (sendClientAction('exploreMapEvent', pi, m, hoursCost, hasItem)) return;
   const p = G.players[pi];
   p.atCamp = false;
   m.explored = true;
@@ -2260,7 +2263,7 @@ function processActionResult(pi, parsed, meta, hoursCost) {
     }
   }
 
-  if (finalLoot.length && (!parsed.wildlife || pi !== 0)) {
+  if (finalLoot.length && (!parsed.wildlife || !p.isBot)) {
     finalLoot.forEach(item => addToInventory(pi, item));
     addMsg(`🎒 ได้รับ: ${finalLoot.join(', ')}`, 'bubble-event-good');
   }
@@ -2268,7 +2271,7 @@ function processActionResult(pi, parsed, meta, hoursCost) {
   // Wildlife handling
   if (parsed.wildlife) {
     addWildlife(`${p.name} เจอ ${parsed.wildlife}`);
-    if (pi === 0) {
+    if (!p.isBot) {
       initiateCombat(pi, parsed.wildlife, hoursCost, finalLoot, parsed.story);
       G.isLoading = false;
       removeTyping();
