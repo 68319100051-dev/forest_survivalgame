@@ -20,7 +20,7 @@
     <p style="color:var(--text3);font-size:14px;letter-spacing:2px;text-transform:uppercase;">Dual-Mode Architecture</p>
   </div>
 
-  <div style="display:flex;gap:20px;width:min(90%,500px);">
+  <div class="mode-cards" style="display:flex;gap:20px;width:min(90%,500px);">
     <div onclick="selectGameMode('single')" style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:16px;padding:24px;text-align:center;cursor:pointer;transition:all 0.3s;" onmouseover="this.style.borderColor='var(--green2)';this.style.transform='translateY(-5px)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform='none'">
       <div style="font-size:40px;margin-bottom:12px;">👤</div>
       <div style="font-family:'Cinzel',serif;font-size:18px;color:var(--green2);margin-bottom:8px;">Single Player</div>
@@ -280,6 +280,7 @@
 <script src="/socket.io/socket.io.js"></script>
 <script src="events.js" defer></script>
 <script src="game.js" defer></script>
+<script src="fx.js" defer></script>
 
 </body>
 </html>

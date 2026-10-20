@@ -64,7 +64,7 @@ const WEATHER_TYPES = [
 
 // ===================== API CONFIGURATION =====================
 let ANTHROPIC_API_KEY = localStorage.getItem('anthropic_api_key') || '';
-const ANTHROPIC_MODEL = 'claude-3-5-haiku-latest';
+const ANTHROPIC_MODEL = 'claude-haiku-5-5'; // server may override via ANTHROPIC_MODEL env
 
 function clamp(v, mn, mx) { return Math.max(mn, Math.min(mx, v)); }
 
@@ -772,7 +772,7 @@ function startCharacterSequence() {
           confirmBtn.textContent = '⏱️ รอเพื่อนคนอื่นเลือกอาชีพ...';
         };
       } else {
-        confirmBtn.onclick = function() { initGame(name); };
+        confirmBtn.onclick = function() { initGame(name, finalJob); };
       }
     }
   }, 100);
@@ -858,7 +858,7 @@ function initGameMultiplayer(roomData) {
   }
 }
 
-function initGame(playerName) {
+function initGame(playerName, playerJob) {
   try {
     const keyInput = document.getElementById('api-key-input');
     if (keyInput && keyInput.value.trim()) {
@@ -918,8 +918,9 @@ function initGame(playerName) {
         }
       };
     });
-    // shuffle jobs
-    const shuffled = [...JOBS].sort(()=>Math.random()-0.5).slice(0,4);
+    // shuffle jobs — keep the job the player rolled in the gacha
+    const shuffled = [...JOBS].filter(j => !playerJob || j.id !== playerJob.id).sort(()=>Math.random()-0.5);
+    if (playerJob) shuffled.unshift(playerJob);
     G.players.forEach((p,i) => p.job = shuffled[i]);
 
     // week progress
@@ -1145,6 +1146,10 @@ function startTurn(pi) {
         p.hp = clamp(p.hp - 10, 0, 100);
         addMsg(`💧 ${p.name} ขาดน้ำรุนแรง! — HP -10`, 'bubble-event-bad');
       }
+      if (p.hunger <= 0) {
+        p.hp = clamp(p.hp - 8, 0, 100);
+        addMsg(`🍖 ${p.name} อดอาหารจนร่างกายทรุด! — HP -8`, 'bubble-event-bad');
+      }
 
       if (G.activeEvent.acidRain && !p.atCamp) {
         p.hp = clamp(p.hp - 5, 0, 100);
@@ -1177,7 +1182,7 @@ function startTurn(pi) {
 
     // ถ้าเป็นบอท ให้เล่นอัตโนมัติหลังจากหน่วงเวลา
     if (p.isBot) {
-      if (!socket || G.isHost) {
+      if (!socket || G.isHost || G.mode !== 'multi') {
         setTimeout(() => botChooseAction(pi), 1500 + Math.random() * 1000);
       }
     }
@@ -2411,10 +2416,10 @@ function renderCombatScreen() {
   document.getElementById('combat-wild-hp').textContent = cs.animalHp;
   document.getElementById('combat-player-hp').textContent = p.hp;
   
-  let desc = `คุณเดินทางเข้าไปในป่าและเผชิญหน้ากับ **${cs.animalName}** อย่างหลีกเลี่ยงไม่ได้!<br><br>`;
-  desc += `*${cs.exploreStory}*<br><br>`;
+  let desc = `คุณเดินทางเข้าไปในป่าและเผชิญหน้ากับ **${cs.animalName}** อย่างหลีกเลี่ยงไม่ได้!\n\n`;
+  desc += `*${cs.exploreStory}*\n\n`;
   desc += `จงเลือกตัดสินใจดำเนินการ:`;
-  document.getElementById('combat-desc').innerHTML = desc;
+  document.getElementById('combat-desc').innerHTML = formatMsg(desc);
   
   const actionsList = document.getElementById('combat-actions-list');
   actionsList.innerHTML = '';
@@ -2546,9 +2551,11 @@ function closeCombat(win) {
   document.getElementById('combat-overlay').style.display = 'none';
   const cs = G.combatState;
   if (!cs) return;
-  
-  spendTime(cs.playerIndex, cs.exploreHours);
   G.combatState = null;
+  // A player killed in combat is handled by killPlayer() (which advances the turn);
+  // spending time here too would advance the turn twice.
+  if (G.players[cs.playerIndex].hp <= 0) { G.isLoading = false; setButtons(false); return; }
+  spendTime(cs.playerIndex, cs.exploreHours);
 }
 
 function spendTime(pi, hours) {
@@ -2747,7 +2754,7 @@ function gameEnd(survived) {
     awardsHtml += `
       <div class="end-award-card">
         <div class="end-award-title">👊 นักสู้แห่งพงไพร</div>
-        <div class="end-award-desc">**${slayer.name}** กำจัดสัตว์ร้ายได้ทั้งหมด **${maxDefeated}** ตัว!</div>
+        <div class="end-award-desc">${formatMsg(`**${slayer.name}** กำจัดสัตว์ร้ายได้ทั้งหมด **${maxDefeated}** ตัว!`)}</div>
       </div>
     `;
   }
@@ -2755,7 +2762,7 @@ function gameEnd(survived) {
     awardsHtml += `
       <div class="end-award-card">
         <div class="end-award-title">🤝 ผู้โอบอ้อมอารี</div>
-        <div class="end-award-desc">**${generous.name}** แบ่งปันเสบียงให้เพื่อนรวม **${maxShared}** ครั้ง!</div>
+        <div class="end-award-desc">${formatMsg(`**${generous.name}** แบ่งปันเสบียงให้เพื่อนรวม **${maxShared}** ครั้ง!`)}</div>
       </div>
     `;
   }
@@ -2763,7 +2770,7 @@ function gameEnd(survived) {
     awardsHtml += `
       <div class="end-award-card">
         <div class="end-award-title">💀 ผู้ดับสูญคนแรก</div>
-        <div class="end-award-desc">**${firstDie.name}** จากไปก่อนใครในวันที่ **${minDayDied}**</div>
+        <div class="end-award-desc">${formatMsg(`**${firstDie.name}** จากไปก่อนใครในวันที่ **${minDayDied}**`)}</div>
       </div>
     `;
   }
@@ -2772,7 +2779,7 @@ function gameEnd(survived) {
   awardsHtml += `
     <div class="end-award-card" style="grid-column: span 2; border-color: var(--amber2); background: rgba(212, 144, 42, 0.08);">
       <div class="end-award-title" style="color: var(--amber2);">🏆 ผู้รอดชีวิตระดับตำนาน (MVP)</div>
-      <div class="end-award-desc">**${mvp.name}** เป็นผู้นำสูงสุดของกลุ่มด้วยสถิติอันยอดเยี่ยม ทำคะแนนรวมได้ **${mvp.finalScore}** แต้ม!</div>
+      <div class="end-award-desc">${formatMsg(`**${mvp.name}** เป็นผู้นำสูงสุดของกลุ่มด้วยสถิติอันยอดเยี่ยม ทำคะแนนรวมได้ **${mvp.finalScore}** แต้ม!`)}</div>
     </div>
   `;
   
@@ -3427,13 +3434,22 @@ function showItemInfo(item) {
 }
 
 // ===================== UI HELPERS =====================
+// Escape HTML (player names / AI text) then render **bold**, *italic* and newlines
+function formatMsg(text) {
+  return String(text)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+    .replace(/\*\*(.+?)\*\*/g,'<b>$1</b>')
+    .replace(/\*(.+?)\*/g,'<i>$1</i>')
+    .replace(/\n/g,'<br>');
+}
+
 function addMsg(text, cls) {
   const area = document.getElementById('story-box');
   const msgDiv = document.createElement('div');
   msgDiv.className = 'story-msg';
   const bubble = document.createElement('div');
   bubble.className = `story-bubble ${cls}`;
-  bubble.innerHTML = text.replace(/\n/g,'<br>');
+  bubble.innerHTML = formatMsg(text);
   msgDiv.appendChild(bubble);
   area.appendChild(msgDiv);
   area.scrollTop = area.scrollHeight;
