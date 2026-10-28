@@ -118,6 +118,8 @@
     death:   t => { [392, 370, 349, 330, 196].forEach((f, i) => tone(f, t + i * 0.2, 0.3, 'square', 0.05)); },
     victory: t => { [523, 523, 523, 659, 784, 1047].forEach((f, i) => tone(f, t + [0, .12, .24, .4, .56, .75][i], i === 5 ? 0.6 : 0.14, 'square', 0.06)); },
     defeat:  t => { [330, 311, 294, 277].forEach((f, i) => tone(f, t + i * 0.3, 0.45, 'sawtooth', 0.045)); },
+    click:   t => { tone(520, t, 0.04, 'square', 0.035); },
+    turn:    t => { tone(784, t, 0.09, 'triangle', 0.06); tone(1047, t + 0.1, 0.16, 'triangle', 0.06); },
   };
   function sfx(name) {
     if (!prefs.sound || !SFX[name]) return;
@@ -785,5 +787,12 @@
     return res;
   });
 
-  window.FX = { play, pop, sfx, shake, floatText, prefs };
+  // Static pixel-art preview of a location, used by ui.js on the location cards
+  function locationThumb(canvas, id) {
+    const c = canvas.getContext('2d');
+    c.imageSmoothingEnabled = false;
+    drawWith(c, canvas.width, canvas.height, () => locationBackdrop(id, 0.6, 30));
+  }
+
+  window.FX = { play, pop, sfx, shake, floatText, prefs, locationThumb };
 })();
