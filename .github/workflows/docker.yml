@@ -35,4 +35,5 @@ jobs:
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/forest_survivalgame:latest
 
       - name: Output image reference (for Render)
-        run: echo "Docker image: ${{ secrets.DOCKERHUB_USERNAME }}/forest_survivalgame:latest"
+        run: |
+          echo "Docker image: ${{ secrets.DOCKERHUB_USERNAME }}/forest_survivalgame:latest"
