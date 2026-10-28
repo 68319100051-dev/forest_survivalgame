@@ -62,6 +62,28 @@ const WEATHER_TYPES = [
   { icon:'🌤️', text:'อากาศดี — ฟื้นฟูพลังงาน', eMod:5 },
 ];
 
+// decay: stat loss per turn, animalHp/animalDmg: wildlife strength,
+// restHp: HP regained when resting, botCaution: >1 = bots play safer
+const DIFFICULTIES = {
+  easy:   { id:'easy',   name:'ง่าย',  emoji:'🌱', decay:0.65, animalHp:0.75, animalDmg:0.7,  restHp:10, botCaution:1.25, desc:'ค่าสถานะลดช้า สัตว์ป่าอ่อนแอ' },
+  normal: { id:'normal', name:'ปกติ',  emoji:'🌲', decay:0.85, animalHp:0.9,  animalDmg:0.85, restHp:6,  botCaution:1.0,  desc:'สมดุล เหมาะกับการเล่นครั้งแรก' },
+  hard:   { id:'hard',   name:'ยาก',   emoji:'💀', decay:1.15, animalHp:1.2,  animalDmg:1.2,  restHp:2,  botCaution:0.75, desc:'ป่าโหดร้าย บอทกล้าเสี่ยงมากขึ้น' },
+};
+let selectedDifficulty = 'normal';
+
+function getDifficulty() {
+  return DIFFICULTIES[G.difficulty] || DIFFICULTIES.normal;
+}
+
+function selectDifficulty(id) {
+  if (!DIFFICULTIES[id]) return;
+  selectedDifficulty = id;
+  document.querySelectorAll('.diff-btn').forEach(b => b.classList.toggle('active', b.dataset.diff === id));
+  const desc = document.getElementById('difficulty-desc');
+  if (desc) desc.textContent = DIFFICULTIES[id].desc;
+}
+window.selectDifficulty = selectDifficulty;
+
 // ===================== API CONFIGURATION =====================
 let ANTHROPIC_API_KEY = localStorage.getItem('anthropic_api_key') || '';
 const ANTHROPIC_MODEL = 'claude-haiku-5-5'; // server may override via ANTHROPIC_MODEL env
@@ -320,6 +342,8 @@ function selectGameMode(mode) {
     document.getElementById('mode-selector-screen').style.display = 'none';
     document.getElementById('online-lobby-panel').style.display = 'none';
     document.getElementById('start-screen').style.display = 'flex';
+    const diffPicker = document.getElementById('difficulty-picker');
+    if (diffPicker) diffPicker.style.display = '';
     
     // Ensure UI is unlocked for single player
     const app = document.getElementById('app');
@@ -530,6 +554,10 @@ function startCharacterSequenceFromLobby() {
     roomCodeDisplay.textContent = `ROOM: SURV-${G.roomCode}`;
     roomCodeDisplay.style.display = 'block';
   }
+
+  // Difficulty is a single-player option
+  const diffPicker = document.getElementById('difficulty-picker');
+  if (diffPicker) diffPicker.style.display = 'none';
 
   // Pre-fill user name and auto-start gacha for multiplayer
   if (socket && G.mode === 'multi') {
@@ -783,6 +811,7 @@ window.startCharacterSequence = startCharacterSequence;
 function initGameMultiplayer(roomData) {
   try {
     G.mode = 'multi';
+    G.difficulty = 'normal';
     G.isHost = !!(roomData.players.find(p => p.id === socket?.id)?.isHost);
     const keyInput = document.getElementById('api-key-input');
     if (keyInput && keyInput.value.trim()) {
@@ -875,6 +904,7 @@ function initGame(playerName, playerJob) {
     }
     
     // Reset G state
+    G.difficulty = selectedDifficulty;
     G.day = 1;
     G.currentPlayer = 0;
     G.usedEventIds = [];
@@ -931,6 +961,8 @@ function initGame(playerName, playerJob) {
 
     buildCraftList();
     updateCampUI();
+    const diff = getDifficulty();
+    addMsg(`${diff.emoji} ระดับความยาก: **${diff.name}** — ${diff.desc}`, 'bubble-system');
     startDay();
   } catch(err) {
     console.error('Error in initGame:', err);
@@ -1114,10 +1146,11 @@ function startTurn(pi) {
 
     if (!socket || G.isHost || G.mode !== 'multi') {
       // hunger/energy/thirst/sanity decay
-      const hungerLoss = G.activeEvent.noDecay ? 0 : 8 + (G.activeEvent.extraHungerDecay || 0);
-      const energyLoss = G.activeEvent.noDecay ? 0 : 5 + (G.activeEvent.extraEnergyDecay || 0);
-      const thirstLoss = G.activeEvent.noDecay ? 0 : 10 + (G.weather.icon === '☀️' ? 10 : 0) + (G.activeEvent.extraHungerDecay ? 5 : 0);
-      const sanityLoss = (G.activeEvent.noDecay || G.camp.structures.includes('fortified')) ? 0 : 5;
+      const decay = getDifficulty().decay;
+      const hungerLoss = G.activeEvent.noDecay ? 0 : Math.round((8 + (G.activeEvent.extraHungerDecay || 0)) * decay);
+      const energyLoss = G.activeEvent.noDecay ? 0 : Math.round((5 + (G.activeEvent.extraEnergyDecay || 0)) * decay);
+      const thirstLoss = G.activeEvent.noDecay ? 0 : Math.round((10 + (G.weather.icon === '☀️' ? 10 : 0) + (G.activeEvent.extraHungerDecay ? 5 : 0)) * decay);
+      const sanityLoss = (G.activeEvent.noDecay || G.camp.structures.includes('fortified')) ? 0 : Math.round(5 * decay);
       
       p.hunger = clamp(p.hunger - hungerLoss, 0, 100);
       p.energy = clamp(p.energy - energyLoss, 0, 100);
@@ -1143,12 +1176,14 @@ function startTurn(pi) {
       }
 
       if (p.thirst <= 0) {
-        p.hp = clamp(p.hp - 10, 0, 100);
-        addMsg(`💧 ${p.name} ขาดน้ำรุนแรง! — HP -10`, 'bubble-event-bad');
+        const dmg = Math.round(10 * decay);
+        p.hp = clamp(p.hp - dmg, 0, 100);
+        addMsg(`💧 ${p.name} ขาดน้ำรุนแรง! — HP -${dmg}`, 'bubble-event-bad');
       }
       if (p.hunger <= 0) {
-        p.hp = clamp(p.hp - 8, 0, 100);
-        addMsg(`🍖 ${p.name} อดอาหารจนร่างกายทรุด! — HP -8`, 'bubble-event-bad');
+        const dmg = Math.round(8 * decay);
+        p.hp = clamp(p.hp - dmg, 0, 100);
+        addMsg(`🍖 ${p.name} อดอาหารจนร่างกายทรุด! — HP -${dmg}`, 'bubble-event-bad');
       }
 
       if (G.activeEvent.acidRain && !p.atCamp) {
@@ -1165,8 +1200,8 @@ function startTurn(pi) {
       }
 
       // Apply poison/sick effects
-      if (p.statuses.includes('poison')) { p.hp = clamp(p.hp - 15, 0, 100); addMsg(`☠️ ${p.name} ได้รับพิษ — HP -15`, 'bubble-event-bad'); }
-      if (p.statuses.includes('sick'))   { p.hp = clamp(p.hp - 8, 0, 100);  p.energy = clamp(p.energy-10,0,100); addMsg(`🤒 ${p.name} กำลังป่วย — HP -8, พลังงาน -10`, 'bubble-event-bad'); }
+      if (p.statuses.includes('poison')) { const dmg = Math.round(15 * decay); p.hp = clamp(p.hp - dmg, 0, 100); addMsg(`☠️ ${p.name} ได้รับพิษ — HP -${dmg}`, 'bubble-event-bad'); }
+      if (p.statuses.includes('sick'))   { const dmg = Math.round(8 * decay); p.hp = clamp(p.hp - dmg, 0, 100);  p.energy = clamp(p.energy-10,0,100); addMsg(`🤒 ${p.name} กำลังป่วย — HP -${dmg}, พลังงาน -10`, 'bubble-event-bad'); }
 
       if (p.hp <= 0) { killPlayer(pi); return; }
     }
@@ -1367,8 +1402,11 @@ function handleAction(pi, action) {
       restMsg += ' (บันทึกประสบการณ์ช่วยให้หลับลึก +10)';
     }
 
+    const restHp = getDifficulty().restHp + (hasCampHut ? 4 : 0);
+    if (restHp > 0 && p.hp < 100) restMsg += `, HP +${restHp}`;
     addMsg(restMsg, 'bubble-player');
     p.energy = clamp(p.energy + energyBonus, 0, 100);
+    p.hp = clamp(p.hp + restHp, 0, 100);
     p.hunger = clamp(p.hunger - 5, 0, 100);
     p.statuses = p.statuses.filter(s => s !== 'tired');
     if (hasCampHut) p.statuses = p.statuses.filter(s => s !== 'wet' && s !== 'cold');
@@ -1571,72 +1609,252 @@ function doPoisonFood(pi, foodName) {
 }
 
 // ===================== BOT AI =====================
+const BOT_HERBS = ['สมุนไพร','สมุนไพรหายาก','ยาสมุนไพร'];
+const BOT_RAW_FOODS = ['ไก่ป่า','กระต่าย','ค้างคาว','กบ','กุ้งฝอย','หอยเชลล์','ปูน้ำจืด','ไข่นก','ไข่จระเข้','แมลง','มอสเรืองแสง','เนื้อสัตว์','ปลา'];
+const BOT_TOXIC_FOODS = ['ผลไม้มีพิษ','น้ำเน่า','เห็ด','อาหารอาบยาพิษ'];
+const BOT_WEAPONS = ['หอก','มีด'];
+const BOT_WATER_LOCS = ['river','waterfall','swamp'];
+// [hunger, thirst] gained when eaten — mirrors handleAction('eat'); unknown foods give hunger 20
+const BOT_FOOD_VALUE = {
+  'น้ำสะอาด':[0,80], 'น้ำเน่า':[0,50], 'ผลไม้':[15,15], 'ผลไม้มีพิษ':[15,15], 'เห็ด':[15,0],
+  'ปลา':[25,0], 'ปลาย่าง':[40,0], 'กบ':[20,0], 'แมลง':[10,0], 'ไข่':[20,0], 'ไข่นก':[20,0],
+  'เนื้อสัตว์':[35,0], 'เนื้อย่าง':[50,0], 'กระต่าย':[25,0], 'ไก่ป่า':[25,0], 'อาหารกระป๋อง':[35,0],
+  'อาหารอุ่น':[55,0], 'ยาบำรุง':[20,0], 'ซุปเห็ด':[35,0], 'รวงผึ้ง':[20,0], 'กุ้งฝอย':[15,10],
+  'หอยเชลล์':[15,10], 'ปูน้ำจืด':[15,10], 'ไข่จระเข้':[45,0], 'หม้อไฟป่า':[100,100], 'ซุปสมาธิ':[20,0],
+};
+
+// Multiset check: every entry of needs must be covered by a distinct entry of inv
+function hasMaterials(inv, needs) {
+  const tmp = [...inv];
+  return needs.every(mat => {
+    const idx = tmp.indexOf(mat);
+    if (idx === -1) return false;
+    tmp.splice(idx, 1);
+    return true;
+  });
+}
+
+function botCraftNeeds(p, needs) {
+  return (p.job && p.job.id === 'engineer') ? needs.slice(0, needs.length - 1) : needs;
+}
+
+function botHasWeapon(p) {
+  return BOT_WEAPONS.some(w => p.inventory.includes(w));
+}
+
+function botIsSafeFood(p, item) {
+  if (!isFood(item) && item !== 'อาหารอาบยาพิษ') return false;
+  const isChef = p.job.id === 'chef';
+  if (item === 'อาหารอาบยาพิษ') return false;
+  if (BOT_TOXIC_FOODS.includes(item) && !isChef) return false;
+  if (BOT_RAW_FOODS.includes(item) && !isChef) return false;
+  if (item === 'น้ำสะอาด' && G.activeEvent.waterPoison) return false;
+  if (item === 'ผลไม้' && G.activeEvent.forestToxin && !isChef) return false;
+  return true;
+}
+
+function botSafeFoods(p) {
+  return p.inventory.filter(i => botIsSafeFood(p, i));
+}
+
+// Best safe food for the stat(s) the bot needs; null when nothing helps
+function botPickFood(p, needHunger, needThirst) {
+  let best = null, bestScore = 0;
+  botSafeFoods(p).forEach(f => {
+    const [h, t] = BOT_FOOD_VALUE[f] || [20, 0];
+    // only count the gain that isn't wasted on a full stat
+    const score = (needHunger ? Math.min(h, 100 - p.hunger) : 0) + (needThirst ? Math.min(t, 100 - p.thirst) : 0);
+    if (score > bestScore) { best = f; bestScore = score; }
+  });
+  return best;
+}
+
+// Eat a specific item through the normal eat action (it eats the first food in the bag)
+function botEat(pi, food) {
+  const p = G.players[pi];
+  const idx = p.inventory.indexOf(food);
+  if (idx === -1) return false;
+  p.inventory.splice(idx, 1);
+  p.inventory.unshift(food);
+  handleAction(pi, 'eat');
+  return true;
+}
+
+// Pull what the bot needs out of the shared camp store (free action)
+function botTakeFromCamp(pi) {
+  const p = G.players[pi];
+  if (!p.atCamp || p.inventory.length >= getInventoryLimit(p)) return false;
+  const shared = G.camp.sharedItems;
+  const safeFoods = botSafeFoods(p);
+  const hasWater = safeFoods.some(f => (BOT_FOOD_VALUE[f] || [0, 0])[1] >= 50);
+  const wantWater = p.thirst < 70 && !hasWater;
+  const wantFood = p.hunger < 65 && safeFoods.filter(f => (BOT_FOOD_VALUE[f] || [20, 0])[0] > 0).length < 1;
+  const wantHerb = (p.hp < 75 || p.statuses.some(s => ['sick','poison','injured'].includes(s))) && p.job.id !== 'doctor' && !p.inventory.some(i => BOT_HERBS.includes(i));
+  const wantWeaponMats = !botHasWeapon(p);
+
+  let idx = -1;
+  if (wantWater) idx = shared.findIndex(i => i === 'น้ำสะอาด' && botIsSafeFood(p, i));
+  if (idx === -1 && wantHerb) idx = shared.findIndex(i => BOT_HERBS.includes(i));
+  if (idx === -1 && wantFood) idx = shared.findIndex(i => botIsSafeFood(p, i) && (BOT_FOOD_VALUE[i] || [20, 0])[0] > 0);
+  if (idx === -1 && wantWeaponMats) {
+    idx = shared.findIndex(i => BOT_WEAPONS.includes(i));
+    if (idx === -1) {
+      const needs = botCraftNeeds(p, CRAFTS.find(c => c.name === 'หอก').needs);
+      const missing = needs.filter(m => !p.inventory.includes(m));
+      if (missing.length && hasMaterials(shared, missing) && p.inventory.length + missing.length <= getInventoryLimit(p)) {
+        idx = shared.indexOf(missing[0]);
+      }
+    }
+  }
+  if (idx === -1) return false;
+
+  const item = shared[idx];
+  shared.splice(idx, 1);
+  addToInventory(pi, item);
+  addMsg(`🎒 ${p.name} หยิบ ${item} ออกจากคลังแคมป์`, 'bubble-system');
+  updateCampUI();
+  spendTime(pi, 0);
+  return true;
+}
+
 function botChooseAction(pi) {
   const p = G.players[pi];
   if (!p.alive || G.dayDone[pi]) { nextTurn(); return; }
-  
-  if (G.isLoading) { 
+
+  if (G.isLoading) {
     setTimeout(() => botChooseAction(pi), 800);
-    return; 
+    return;
   }
 
-  // 1. Heal if low HP
-  if (p.hp < 40 && (p.job.id === 'doctor' || p.inventory.find(i => i === 'สมุนไพร' || i === 'สมุนไพรหายาก' || i === 'ยาสมุนไพร'))) {
+  const caution = getDifficulty().botCaution;
+  const isDoc = p.job.id === 'doctor';
+  const hasHerb = p.inventory.some(i => BOT_HERBS.includes(i));
+  const ailing = p.statuses.some(s => s === 'sick' || s === 'poison');
+  const retreatHp = Math.round(45 * caution);
+  if (p.botDay !== G.day) { p.botDay = G.day; p.botExplores = 0; p.botRescueTried = false; }
+
+  // 1. Day 7: try to call the rescue helicopter once
+  if (G.day === 7 && !p.botRescueTried && p.hoursLeft >= 2 &&
+      ['คบเพลิง','สัญญาณขอความช่วยเหลือ','วิทยุกู้ภัย SOS'].some(i => p.inventory.includes(i))) {
+    p.botRescueTried = true;
+    handleAction(pi, 'rescue');
+    return;
+  }
+
+  // 2. Treat sickness/poison right away, and heal when hurt
+  if ((isDoc || hasHerb) && p.hoursLeft >= 2 &&
+      (ailing || p.hp < Math.min(80, retreatHp + 15) || (p.statuses.includes('injured') && p.hp < 85))) {
     handleAction(pi, 'heal');
     return;
   }
 
-  // 2. Eat/Drink if extremely low
-  if ((p.hunger < 30 || p.thirst < 30) && p.inventory.find(i => isFood(i))) {
-    handleAction(pi, 'eat');
-    return;
-  }
+  // 3. Restock from the camp store (water, food, herbs, weapon materials)
+  if (botTakeFromCamp(pi)) return;
 
-  // 3. Special Map Event - Bot chooses to explore if has required item and enough time
-  if (G.mapEvent && !G.mapEvent.explored && p.hoursLeft >= G.mapEvent.time + 3) {
-    if (p.inventory.includes(G.mapEvent.requiredItem) || Math.random() < 0.2) {
-      exploreMapEvent(pi);
+  // 4. Cook raw food at the camp fire so it is safe to eat
+  const hasFire = G.camp.structures.includes('campfire') || G.camp.structures.includes('stove');
+  if (p.atCamp && hasFire && p.job.id !== 'chef' && p.hoursLeft >= 1) {
+    const cookable = CAMP_RECIPES.find(r => p.inventory.includes(r.input));
+    if (cookable) {
+      doCookFood(pi, cookable.input, cookable.output, cookable.hungerGain, cookable.hpGain);
       return;
     }
   }
 
-  // 4. Return to camp if hours are running low and not at camp
+  // 5. Eat/drink before stats get dangerous
+  const eatAt = Math.round(50 * caution);
+  if ((p.hunger < eatAt || p.thirst < eatAt) && p.hoursLeft >= 1) {
+    const food = botPickFood(p, p.hunger < eatAt, p.thirst < eatAt);
+    if (food) { botEat(pi, food); return; }
+    // Starving with only raw food: eat it anyway if we can cure the sickness afterwards
+    if (p.hunger <= 15 && (isDoc || hasHerb) && !p.statuses.includes('sick')) {
+      const raw = p.inventory.find(i => BOT_RAW_FOODS.includes(i));
+      if (raw) { botEat(pi, raw); return; }
+    }
+  }
+
+  // 6. Craft a weapon before walking into the wild
+  if (!botHasWeapon(p) && p.hoursLeft >= 2) {
+    const spear = CRAFTS.find(c => c.name === 'หอก');
+    if (hasMaterials(p.inventory, botCraftNeeds(p, spear.needs))) {
+      doCraft(pi, spear.name);
+      return;
+    }
+  }
+
+  // 7. Badly hurt: go home and recover
+  if (p.hp < retreatHp) {
+    if (!p.atCamp && p.hoursLeft >= 2) { handleAction(pi, 'camp'); return; }
+    if (p.atCamp && p.hoursLeft >= 2 && botCampAction(pi)) return;
+    if (p.atCamp && p.hoursLeft >= 4) { handleAction(pi, 'rest'); return; }
+  }
+
+  // 8. Tired: rest (at camp) or head back
+  if (p.energy < Math.round(35 * caution)) {
+    if (!p.atCamp && p.hoursLeft >= 2) { handleAction(pi, 'camp'); return; }
+    if (p.atCamp && p.hoursLeft >= 4) { handleAction(pi, 'rest'); return; }
+  }
+
+  // 9. Return to camp if hours are running low
   if (!p.atCamp && p.hoursLeft <= 3) {
     handleAction(pi, 'camp');
     return;
   }
 
-  // 5. Rest if tired and already at camp
-  if (p.atCamp && p.energy < 30 && p.hoursLeft >= 4) {
-    handleAction(pi, 'rest');
+  // 10. Special map event — only when healthy and properly equipped
+  if (G.mapEvent && !G.mapEvent.explored && p.hoursLeft >= G.mapEvent.time + 3 &&
+      p.inventory.includes(G.mapEvent.requiredItem) && p.hp >= Math.min(90, Math.round(70 * caution)) && p.energy >= 40) {
+    p.botExplores++;
+    exploreMapEvent(pi);
     return;
   }
 
-  /**
-   * BUG-06: แก้ไขการตรวจ hoursLeft ของ Bot ให้ถูกต้องตามเวลาสถานที่จริง
-   */
-  const unexplored = G.locations.findIndex(loc => !loc.explored.includes(pi) && !loc.blocked);
-  if (unexplored !== -1) {
-    const loc = G.locations[unexplored];
-    if (p.hoursLeft >= loc.time + 3) {
-      exploreLocation(pi, unexplored);
+  // 11. Explore the safest useful location the bot can handle right now
+  const maxExplores = caution >= 1 ? 2 : 3;
+  if (p.botExplores < maxExplores && p.energy >= 30 && p.hp >= retreatHp) {
+    const armed = botHasWeapon(p);
+    const maxDanger = ((p.hp - 30) / 100) / caution + (armed ? 0.1 : 0);
+    const needWater = p.thirst < 70 && !botSafeFoods(p).some(f => (BOT_FOOD_VALUE[f] || [0, 0])[1] >= 50);
+    let bestLi = -1, bestScore = -Infinity;
+    G.locations.forEach((loc, li) => {
+      if (loc.explored.includes(pi) || loc.blocked) return;
+      if (p.hoursLeft < loc.time + 3) return;
+      if (loc.danger > maxDanger) return;
+      let score = -loc.danger + Math.random() * 0.1;
+      if (needWater && BOT_WATER_LOCS.includes(loc.id)) score += 0.5;
+      if (!armed && (loc.loot.includes('ไม้') || loc.loot.includes('หิน') || loc.loot.includes('มีด'))) score += 0.15;
+      if (score > bestScore) { bestScore = score; bestLi = li; }
+    });
+    if (bestLi !== -1) {
+      p.botExplores++;
+      exploreLocation(pi, bestLi);
       return;
     }
   }
 
-  // 6. Use thief skill
+  // 12. Use thief skill
   if (p.job.id === 'thief' && !p.skillUsed && p.hoursLeft >= 2) {
     doSkillAction(pi);
     return;
   }
 
-  // 7. Bot Camp Actions (Build, Cook, Store)
-  if (p.atCamp && p.hoursLeft >= 2) {
+  // 13. Go home to build, cook and store
+  if (!p.atCamp && p.hoursLeft >= 2) {
+    handleAction(pi, 'camp');
+    return;
+  }
+  if (p.atCamp && p.hoursLeft >= 1) {
     if (botCampAction(pi)) return;
   }
 
-  // NEW: 8. Independent thought for Bots (Custom Actions)
-  if (p.hoursLeft >= 5 && Math.random() < 0.7) {
+  // 14. Spare time: recover at camp
+  if (p.atCamp && p.hoursLeft >= 4 && (p.energy < 85 || p.hp < 90)) {
+    handleAction(pi, 'rest');
+    return;
+  }
+
+  // 15. Independent thought for Bots (Custom Actions) — only when healthy
+  if (p.hoursLeft >= 5 && p.hp >= 60 && Math.random() < 0.4) {
     const customPrompts = [
       `พยายามขุดดินหาสมบัติหรือของเก่าใกล้แคมป์`,
       `ลองปีนต้นไม้สูงเพื่อมองหาควันไฟหรือสัญญาณคนอื่น`,
@@ -1652,13 +1870,13 @@ function botChooseAction(pi) {
     return;
   }
 
-  // 9. If already at camp, end turn
+  // 16. If already at camp, end turn
   if (p.atCamp) {
     endPlayerTurn(pi);
     return;
   }
 
-  // 10. Not at camp and not enough time to explore — go back to camp
+  // 17. Not at camp and nothing else to do — go back to camp
   handleAction(pi, 'camp');
 }
 
@@ -1685,31 +1903,55 @@ function addToInventory(pi, item) {
   return true;
 }
 
+// Camp structures in the order bots try to build them
+const BOT_BUILD_ORDER = ['campfire','hut','watertank','clinic','stove','fence','tower','purifier','fortified'];
+// Items a bot keeps in its bag instead of depositing
+const BOT_KEEP_ITEMS = ['หอก','มีด','ยาพิษ','กับดักสัตว์','คบเพลิง','เครื่องกลั่นน้ำ','เชือกยาว','ชุดปฐมพยาบาล','ขวานเหล็ก',
+  'กระเป๋าคาดเอว','สัญญาณขอความช่วยเหลือ','วิทยุกู้ภัย SOS','ชุดแผนที่นำทาง','เข็มทิศทองคำ','สมุดบันทึกนักสำรวจ',
+  'อาวุธโบราณ','ชุดเกราะเก่า','เครื่องรางศักดิ์สิทธิ์','ที่พักชั่วคราว','แผนที่ลึกลับ', ...BOT_HERBS];
+
 function botCampAction(pi) {
   const p = G.players[pi];
-  const isEngineer = p.job && p.job.id === 'engineer';
+  if (!p.atCamp) return false;
   const limit = getInventoryLimit(p);
-  
-  // A. Build structure if materials exist
-  const buildable = CAMP_STRUCTURES.find(s => !G.camp.structures.includes(s.id) && s.needs.every(item => p.inventory.includes(item)) && p.hoursLeft >= s.time);
+
+  // A. Build structure if materials exist (bag + camp store)
+  const pool = [...p.inventory, ...G.camp.sharedItems];
+  const buildable = BOT_BUILD_ORDER.map(id => CAMP_STRUCTURES.find(s => s.id === id)).find(s =>
+    s && !G.camp.structures.includes(s.id) && p.hoursLeft >= s.time && hasMaterials(pool, botCraftNeeds(p, s.needs)));
   if (buildable) {
     doBuildCampStructure(pi, buildable.id, buildable.name);
     return true;
   }
-  
+
   // B. Craft useful items if materials exist
-  const craftable = CRAFTS.find(c => {
-    const needs = isEngineer ? c.needs.slice(0, c.needs.length-1) : c.needs;
-    return needs.every(mat => p.inventory.includes(mat)) && p.hoursLeft >= c.time;
-  });
+  const sanityLow = G.players.some(o => o.alive && o.sanity < 40);
+  const wanted = [
+    !p.inventory.includes('เครื่องกลั่นน้ำ') && 'เครื่องกลั่นน้ำ',
+    !p.inventory.includes('กระเป๋าคาดเอว') && 'กระเป๋าคาดเอว',
+    !G.camp.structures.includes('hut') && !p.inventory.includes('ที่พักชั่วคราว') && 'ที่พักชั่วคราว',
+    G.day >= 5 && !p.inventory.includes('คบเพลิง') && 'คบเพลิง',
+    'วิทยุกู้ภัย SOS',
+    'หม้อไฟป่า',
+    sanityLow && 'ธูปสมุนไพร',
+    'กับดักสัตว์',
+  ].filter(Boolean);
+  const craftable = wanted.map(name => CRAFTS.find(c => c.name === name)).find(c =>
+    c && p.hoursLeft >= c.time && hasMaterials(p.inventory, botCraftNeeds(p, c.needs)));
   if (craftable) {
     doCraft(pi, craftable.name);
     return true;
   }
 
-  // C. Cook food if has materials + fire
+  // C. Set a trap around camp for tomorrow's food
+  if (p.inventory.includes('กับดักสัตว์') && p.hoursLeft >= 2) {
+    handleAction(pi, 'place_trap');
+    return true;
+  }
+
+  // D. Cook food if has materials + fire
   const hasFire = G.camp.structures.includes('campfire') || G.camp.structures.includes('stove');
-  if (hasFire && p.hoursLeft >= 1) {
+  if (hasFire && p.hoursLeft >= 1 && p.job.id !== 'chef') {
     const cookable = CAMP_RECIPES.find(r => p.inventory.includes(r.input));
     if (cookable) {
       doCookFood(pi, cookable.input, cookable.output, cookable.hungerGain, cookable.hpGain);
@@ -1717,45 +1959,25 @@ function botCampAction(pi) {
     }
   }
 
-  // D. Store excess items (not food/weapon) - ONLY if at camp
-  if (p.atCamp) {
-    if (p.inventory.length > (limit - 1)) {
-      const nonEssentials = p.inventory.filter(item => !isFood(item) && !['หอก','มีด','ยาพิษ','กับดักสัตว์','คบเพลิง','เครื่องกลั่นน้ำ','เชือกยาว','ชุดปฐมพยาบาล','ขวานเหล็ก'].includes(item));
-      if (nonEssentials.length > 0) {
-        const item = nonEssentials[0];
-        const idx = p.inventory.indexOf(item);
-        if (idx > -1) {
-          p.inventory.splice(idx, 1);
-          G.camp.sharedItems.push(item);
-          addMsg(`📦 ${p.name} ฝาก ${item} ไว้ในคลังแคมป์`, 'bubble-system');
-          updateCampUI();
-          renderAllPanels();
-          spendTime(pi, 0); // Small delay to continue bot turn
-          return true;
-        }
-      }
-    }
-
-    // E. Take essentials from camp if needed (e.g. food/heal)
-    if (p.inventory.length < limit) {
-      const needFood = p.hunger < 50 || p.thirst < 50;
-      const needHeal = p.hp < 60;
-      const takeableIdx = G.camp.sharedItems.findIndex(item => {
-        if (needFood && isFood(item)) return true;
-        if (needHeal && (item === 'สมุนไพร' || item === 'สมุนไพรหายาก' || item === 'ยาสมุนไพร')) return true;
-        return false;
-      });
-
-      if (takeableIdx > -1) {
-        const item = G.camp.sharedItems[takeableIdx];
-        G.camp.sharedItems.splice(takeableIdx, 1);
-        addToInventory(pi, item);
-        addMsg(`🎒 ${p.name} หยิบ ${item} ออกจากคลังแคมป์`, 'bubble-system');
-        updateCampUI();
-        spendTime(pi, 0);
-        return true;
-      }
-    }
+  // E. Deposit surplus to the camp store: spare materials when the bag is filling up,
+  //    and food beyond what the bot needs so other survivors can eat
+  const safeFoods = botSafeFoods(p);
+  let surplus = null;
+  if (p.inventory.length >= limit - 1) {
+    const spearNeeds = botHasWeapon(p) ? [] : botCraftNeeds(p, CRAFTS.find(c => c.name === 'หอก').needs);
+    surplus = p.inventory.find(item => !isFood(item) && !BOT_KEEP_ITEMS.includes(item) && !spearNeeds.includes(item))
+      || p.inventory.find(item => BOT_TOXIC_FOODS.includes(item) && item !== 'อาหารอาบยาพิษ' && p.job.id !== 'chef');
+  }
+  if (!surplus && safeFoods.length > 3) surplus = safeFoods[safeFoods.length - 1];
+  if (surplus) {
+    const idx = p.inventory.indexOf(surplus);
+    p.inventory.splice(idx, 1);
+    G.camp.sharedItems.push(surplus);
+    addMsg(`📦 ${p.name} ฝาก ${surplus} ไว้ในคลังแคมป์`, 'bubble-system');
+    updateCampUI();
+    renderAllPanels();
+    spendTime(pi, 0); // Small delay to continue bot turn
+    return true;
   }
 
   return false;
@@ -2091,7 +2313,7 @@ function botExploreLocation(pi, li, hoursCost) {
   
   const outcome = outcomes[Math.floor(Math.random() * outcomes.length)];
   
-  let hpDelta = outcome.hp;
+  let hpDelta = Math.round(outcome.hp * getDifficulty().animalDmg);
   let energyDelta = outcome.energy;
   
   if (p.job.id === 'soldier' && outcome.wild) hpDelta = Math.ceil(hpDelta * 0.5);
@@ -2151,38 +2373,7 @@ function botExploreLocation(pi, li, hoursCost) {
   
   if (outcome.wild) {
     addWildlife(`${p.name} เจอ ${outcome.wild}`);
-    const hasSpear = p.inventory.includes('หอก');
-    const hasKnife = p.inventory.includes('มีด');
-    const botDmgMult = G.activeEvent.animalHpMult || 1;
-    
-    if (hasSpear) {
-      addMsg(`⚔️ ${p.name} ใช้หอกต่อสู้และกำจัด ${outcome.wild} ได้สำเร็จ! ได้รับเนื้อสัตว์ 🥩`, 'bubble-event-good');
-      addToInventory(pi, 'เนื้อสัตว์');
-      p.stats.animalsDefeated++;
-    } else if (hasKnife) {
-      const dmg = Math.round((p.job.id === 'soldier' ? 4 : 8) * botDmgMult);
-      p.hp = clamp(p.hp - dmg, 0, 100);
-      p.stats.damageTaken += dmg;
-      addMsg(`⚔️ ${p.name} ใช้มีดต่อสู้และกำจัด ${outcome.wild} ได้สำเร็จ! (สูญเสีย HP -${dmg}) ได้รับเนื้อสัตว์ 🥩`, 'bubble-event-good');
-      addToInventory(pi, 'เนื้อสัตว์');
-      p.stats.animalsDefeated++;
-    } else {
-      if (Math.random() < 0.5) {
-        p.energy = clamp(p.energy - 10, 0, 100);
-        addMsg(`🏃 ${p.name} ตัดสินใจวิ่งหนีจาก ${outcome.wild}!`, 'bubble-player');
-      } else {
-        const dmg = Math.round((p.job.id === 'soldier' ? 10 : 20) * botDmgMult);
-        p.hp = clamp(p.hp - dmg, 0, 100);
-        p.stats.damageTaken += dmg;
-        addMsg(`👊 ${p.name} ต่อสู้กับ ${outcome.wild} ด้วยมือเปล่า! ได้รับความเสียหาย ${dmg} หน่วย`, 'bubble-event-bad');
-        const winChance = 0.6 / botDmgMult;
-        if (Math.random() < winChance) {
-          addMsg(`🏆 ${p.name} ล้มสัตว์สำเร็จ! ได้รับเนื้อสัตว์ 🥩`, 'bubble-event-good');
-          addToInventory(pi, 'เนื้อสัตว์');
-          p.stats.animalsDefeated++;
-        }
-      }
-    }
+    botFightOrFlee(pi, outcome.wild);
   }
   
   if (outcome.event === 'good' && Math.random() < 0.5) {
@@ -2195,6 +2386,47 @@ function botExploreLocation(pi, li, hoursCost) {
   if (p.hp <= 0) { killPlayer(pi); return; }
   
   spendTime(pi, hoursCost);
+}
+
+// Bot wildlife encounter: simulate the same fight a player would have and only
+// commit to it when the bot can win without ending up badly hurt; otherwise run.
+function botFightOrFlee(pi, wild) {
+  const p = G.players[pi];
+  let weaponDmg = 8, weaponName = 'มือเปล่า';
+  if (p.inventory.includes('หอก')) { weaponDmg = 40; weaponName = 'หอก'; }
+  else if (p.inventory.includes('มีด')) { weaponDmg = 20; weaponName = 'มีด'; }
+  if (p.inventory.includes('ขวานเหล็ก')) weaponDmg += 12;
+  if (p.inventory.includes('อาวุธโบราณ')) weaponDmg += 20;
+
+  let animalDmg = getAnimalDmg(wild);
+  if (p.job.id === 'soldier') animalDmg = Math.ceil(animalDmg * 0.5);
+  if (p.inventory.includes('ชุดเกราะเก่า')) animalDmg = Math.max(1, Math.ceil(animalDmg * 0.6));
+  else if (p.inventory.includes('เครื่องรางศักดิ์สิทธิ์')) animalDmg = Math.max(1, Math.ceil(animalDmg * 0.8));
+
+  const rounds = Math.ceil(getAnimalMaxHp(wild) / weaponDmg);
+  const expectedDmg = (rounds - 1) * animalDmg;
+  const caution = getDifficulty().botCaution;
+  const armed = weaponName !== 'มือเปล่า';
+  const willFight = p.hp - expectedDmg >= Math.round(35 * caution) && (armed || expectedDmg <= 15);
+
+  if (willFight) {
+    p.hp = clamp(p.hp - expectedDmg, 0, 100);
+    p.stats.damageTaken += expectedDmg;
+    addMsg(`⚔️ ${p.name} ใช้${weaponName}ต่อสู้และกำจัด ${wild} ได้สำเร็จ!${expectedDmg ? ` (สูญเสีย HP -${expectedDmg})` : ''} ได้รับเนื้อสัตว์ 🥩`, expectedDmg ? 'bubble-player' : 'bubble-event-good');
+    addToInventory(pi, 'เนื้อสัตว์');
+    p.stats.animalsDefeated++;
+    return;
+  }
+
+  p.energy = clamp(p.energy - 15, 0, 100);
+  if (Math.random() < 0.3) {
+    const dmg = Math.ceil(animalDmg * 0.7);
+    p.hp = clamp(p.hp - dmg, 0, 100);
+    p.stats.damageTaken += dmg;
+    addMsg(`🏃 ${p.name} วิ่งหนีจาก ${wild} แต่ถูกตะปบหลัง! ได้รับความเสียหาย ${dmg} หน่วย`, 'bubble-event-bad');
+  } else {
+    addMsg(`🏃 ${p.name} ประเมินแล้วว่าสู้ ${wild} ไม่ไหว จึงวิ่งหนีจนพ้นอย่างปลอดภัย!`, 'bubble-player');
+  }
 }
 
 function mockNarrateAction(pi, action, meta={}) {
@@ -2377,18 +2609,19 @@ function getAnimalMaxHp(name) {
   if (G.activeEvent.animalHpMult) {
     hp = Math.round(hp * G.activeEvent.animalHpMult);
   }
-  return hp;
+  return Math.max(1, Math.round(hp * getDifficulty().animalHp));
 }
 
 function getAnimalDmg(name) {
-  if (name.includes('หมี')) return 22;
-  if (name.includes('เสือ')) return 18;
-  if (name.includes('จระเข้')) return 15;
-  if (name.includes('หมูป่า')) return 12;
-  if (name.includes('งูพิษ')) return 15;
-  if (name.includes('งู') || name.includes('หมาจิ้งจอก') || name.includes('สุนัข')) return 10;
-  if (name.includes('ค้างคาว') || name.includes('นก') || name.includes('แมลง')) return 6;
-  return 8;
+  let dmg = 8;
+  if (name.includes('หมี')) dmg = 22;
+  else if (name.includes('เสือ')) dmg = 18;
+  else if (name.includes('จระเข้')) dmg = 15;
+  else if (name.includes('หมูป่า')) dmg = 12;
+  else if (name.includes('งูพิษ')) dmg = 15;
+  else if (name.includes('งู') || name.includes('หมาจิ้งจอก') || name.includes('สุนัข')) dmg = 10;
+  else if (name.includes('ค้างคาว') || name.includes('นก') || name.includes('แมลง')) dmg = 6;
+  return Math.max(1, Math.round(dmg * getDifficulty().animalDmg));
 }
 
 function initiateCombat(pi, animalName, exploreHours, loot, exploreStory) {

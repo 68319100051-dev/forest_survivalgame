@@ -92,6 +92,15 @@
   <div id="lobby-input-area" style="display:flex;flex-direction:column;gap:10px;width:min(90%,280px);">
     <input id="player-name-input" type="text" placeholder="ใส่ชื่อของคุณ..." style="width:100%;padding:8px 10px;background:var(--bg4);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;outline:none;text-align:center;" />
     <input id="api-key-input" type="password" placeholder="ใส่ Anthropic API Key..." style="width:100%;padding:8px 10px;background:var(--bg4);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:11px;outline:none;text-align:center;" />
+    <div id="difficulty-picker">
+      <div class="diff-label">ระดับความยาก</div>
+      <div class="diff-row">
+        <button type="button" class="diff-btn" data-diff="easy" onclick="selectDifficulty('easy')">🌱 ง่าย</button>
+        <button type="button" class="diff-btn active" data-diff="normal" onclick="selectDifficulty('normal')">🌲 ปกติ</button>
+        <button type="button" class="diff-btn" data-diff="hard" onclick="selectDifficulty('hard')">💀 ยาก</button>
+      </div>
+      <div id="difficulty-desc" class="diff-desc">สมดุล เหมาะกับการเล่นครั้งแรก</div>
+    </div>
   </div>
 
   <div id="character-sequence">
