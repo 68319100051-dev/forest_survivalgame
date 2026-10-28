@@ -67,7 +67,7 @@ const WEATHER_TYPES = [
 const DIFFICULTIES = {
   easy:   { id:'easy',   name:'ง่าย',  emoji:'🌱', decay:0.65, animalHp:0.75, animalDmg:0.7,  restHp:10, botCaution:1.25, desc:'ค่าสถานะลดช้า สัตว์ป่าอ่อนแอ' },
   normal: { id:'normal', name:'ปกติ',  emoji:'🌲', decay:0.85, animalHp:0.9,  animalDmg:0.85, restHp:6,  botCaution:1.0,  desc:'สมดุล เหมาะกับการเล่นครั้งแรก' },
-  hard:   { id:'hard',   name:'ยาก',   emoji:'💀', decay:1.15, animalHp:1.2,  animalDmg:1.2,  restHp:2,  botCaution:0.75, desc:'ป่าโหดร้าย บอทกล้าเสี่ยงมากขึ้น' },
+  hard:   { id:'hard',   name:'ยาก',   emoji:'💀', decay:1.35, animalHp:1.3,  animalDmg:1.4,  restHp:0,  botCaution:0.6,  desc:'ป่าโหดร้าย บอทกล้าเสี่ยงมากขึ้น' },
 };
 let selectedDifficulty = 'normal';
 
@@ -1673,22 +1673,28 @@ function botPickFood(p, needHunger, needThirst) {
 function botEat(pi, food) {
   const p = G.players[pi];
   const idx = p.inventory.indexOf(food);
-  if (idx === -1) return false;
+  // the eat action only consumes isFood() items; anything else would stall the bot's turn
+  if (idx === -1 || !isFood(food)) return false;
   p.inventory.splice(idx, 1);
   p.inventory.unshift(food);
   handleAction(pi, 'eat');
   return true;
 }
 
+// Free (0-hour) camp-store moves allowed per bot per day, so take/deposit can never ping-pong forever
+const BOT_MAX_FREE_ACTIONS = 8;
+
 // Pull what the bot needs out of the shared camp store (free action)
 function botTakeFromCamp(pi) {
   const p = G.players[pi];
-  if (!p.atCamp || p.inventory.length >= getInventoryLimit(p)) return false;
+  if (!p.atCamp || p.inventory.length >= getInventoryLimit(p) || p.botFreeActions >= BOT_MAX_FREE_ACTIONS) return false;
   const shared = G.camp.sharedItems;
   const safeFoods = botSafeFoods(p);
+  // never take food when carrying 3+ (botCampAction deposits food above 3)
+  const roomForFood = safeFoods.length < 3;
   const hasWater = safeFoods.some(f => (BOT_FOOD_VALUE[f] || [0, 0])[1] >= 50);
-  const wantWater = p.thirst < 70 && !hasWater;
-  const wantFood = p.hunger < 65 && safeFoods.filter(f => (BOT_FOOD_VALUE[f] || [20, 0])[0] > 0).length < 1;
+  const wantWater = roomForFood && p.thirst < 70 && !hasWater;
+  const wantFood = roomForFood && p.hunger < 65 && safeFoods.filter(f => (BOT_FOOD_VALUE[f] || [20, 0])[0] > 0).length < 1;
   const wantHerb = (p.hp < 75 || p.statuses.some(s => ['sick','poison','injured'].includes(s))) && p.job.id !== 'doctor' && !p.inventory.some(i => BOT_HERBS.includes(i));
   const wantWeaponMats = !botHasWeapon(p);
 
@@ -1710,6 +1716,7 @@ function botTakeFromCamp(pi) {
 
   const item = shared[idx];
   shared.splice(idx, 1);
+  p.botFreeActions++;
   addToInventory(pi, item);
   addMsg(`🎒 ${p.name} หยิบ ${item} ออกจากคลังแคมป์`, 'bubble-system');
   updateCampUI();
@@ -1731,7 +1738,7 @@ function botChooseAction(pi) {
   const hasHerb = p.inventory.some(i => BOT_HERBS.includes(i));
   const ailing = p.statuses.some(s => s === 'sick' || s === 'poison');
   const retreatHp = Math.round(45 * caution);
-  if (p.botDay !== G.day) { p.botDay = G.day; p.botExplores = 0; p.botRescueTried = false; }
+  if (p.botDay !== G.day) { p.botDay = G.day; p.botExplores = 0; p.botFreeActions = 0; p.botRescueTried = false; }
 
   // 1. Day 7: try to call the rescue helicopter once
   if (G.day === 7 && !p.botRescueTried && p.hoursLeft >= 2 &&
@@ -1765,11 +1772,11 @@ function botChooseAction(pi) {
   const eatAt = Math.round(50 * caution);
   if ((p.hunger < eatAt || p.thirst < eatAt) && p.hoursLeft >= 1) {
     const food = botPickFood(p, p.hunger < eatAt, p.thirst < eatAt);
-    if (food) { botEat(pi, food); return; }
+    if (food && botEat(pi, food)) return;
     // Starving with only raw food: eat it anyway if we can cure the sickness afterwards
     if (p.hunger <= 15 && (isDoc || hasHerb) && !p.statuses.includes('sick')) {
-      const raw = p.inventory.find(i => BOT_RAW_FOODS.includes(i));
-      if (raw) { botEat(pi, raw); return; }
+      const raw = p.inventory.find(i => BOT_RAW_FOODS.includes(i) && isFood(i));
+      if (raw && botEat(pi, raw)) return;
     }
   }
 
@@ -1963,13 +1970,19 @@ function botCampAction(pi) {
   //    and food beyond what the bot needs so other survivors can eat
   const safeFoods = botSafeFoods(p);
   let surplus = null;
+  if (p.botFreeActions >= BOT_MAX_FREE_ACTIONS) return false;
   if (p.inventory.length >= limit - 1) {
     const spearNeeds = botHasWeapon(p) ? [] : botCraftNeeds(p, CRAFTS.find(c => c.name === 'หอก').needs);
     surplus = p.inventory.find(item => !isFood(item) && !BOT_KEEP_ITEMS.includes(item) && !spearNeeds.includes(item))
       || p.inventory.find(item => BOT_TOXIC_FOODS.includes(item) && item !== 'อาหารอาบยาพิษ' && p.job.id !== 'chef');
   }
-  if (!surplus && safeFoods.length > 3) surplus = safeFoods[safeFoods.length - 1];
+  if (!surplus && safeFoods.length > 3) {
+    // give away the food type we have the most of, so the bot keeps some water and some food
+    const count = f => safeFoods.filter(x => x === f).length;
+    surplus = [...safeFoods].sort((a, b) => count(b) - count(a))[0];
+  }
   if (surplus) {
+    p.botFreeActions++;
     const idx = p.inventory.indexOf(surplus);
     p.inventory.splice(idx, 1);
     G.camp.sharedItems.push(surplus);
