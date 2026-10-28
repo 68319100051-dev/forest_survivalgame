@@ -35,6 +35,9 @@
     </div>
   </div>
 
+  <!-- Continue a saved single-player run (shown by refreshContinueButton() when a save exists) -->
+  <button id="continue-btn" class="screen-btn" onclick="continueSavedGame()" style="display:none;width:min(90%,500px);margin:0;background:var(--green2);color:var(--bg);font-size:16px;">▶️ เล่นต่อ</button>
+
   <!-- Multiplayer Options (Hidden initially) -->
   <div id="multi-options" style="display:none; flex-direction:column; gap:12px; width:300px; margin-top:20px;">
     <button class="screen-btn" onclick="createOnlineRoom()" style="background:var(--amber); color:var(--bg);">🆕 สร้างห้องใหม่ (Host)</button>

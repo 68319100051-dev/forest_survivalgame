@@ -615,6 +615,137 @@ let G = {
   secondsLeft: 180
 };
 
+// ===================== SINGLE-PLAYER AUTOSAVE =====================
+// Bump SAVE_VERSION whenever the saved shape changes; older saves are then ignored.
+const SAVE_KEY = 'forest_survival_save';
+const SAVE_VERSION = 1;
+const SAVE_LOG_LIMIT = 150; // story-box messages kept in a save
+
+// phase 'turn': saved at the top of startTurn (before decay) → resume with startTurn(currentPlayer)
+// phase 'newDay': saved at the end of endDay (day already advanced) → resume with startDay()
+function saveGame(phase) {
+  if (G.mode === 'multi') return;
+  try {
+    const box = document.getElementById('story-box');
+    const msgs = box ? [...box.children].filter(el => el.id !== 'typing-indicator') : [];
+    const data = {
+      version: SAVE_VERSION,
+      savedAt: Date.now(),
+      phase,
+      state: {
+        players: G.players, day: G.day, currentPlayer: G.currentPlayer,
+        dayDone: G.dayDone, thiefUsed: G.thiefUsed, locations: G.locations,
+        camp: G.camp, weather: G.weather, activeEvent: G.activeEvent,
+        mapEvent: G.mapEvent, rescueData: G.rescueData,
+        usedEventIds: G.usedEventIds, activeTraps: G.activeTraps
+      },
+      storyLog: msgs.slice(-SAVE_LOG_LIMIT).map(el => el.outerHTML).join(''),
+      dailyEventHtml: document.getElementById('daily-event-box')?.innerHTML || ''
+    };
+    localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+  } catch (err) {
+    console.warn('Autosave failed:', err);
+  }
+}
+
+// Returns a valid save or null; a broken or outdated save is removed.
+function readSave() {
+  let raw = null;
+  try { raw = localStorage.getItem(SAVE_KEY); } catch (err) { return null; }
+  if (!raw) return null;
+  try {
+    const data = JSON.parse(raw);
+    const s = data && data.state;
+    const ok = data.version === SAVE_VERSION && s
+      && Array.isArray(s.players) && s.players.length
+      && s.players.every(p => p && p.job && Array.isArray(p.inventory) && Array.isArray(p.statuses))
+      && Number.isInteger(s.day) && s.day >= 1 && s.day <= 7
+      && Number.isInteger(s.currentPlayer) && s.players[s.currentPlayer]
+      && Array.isArray(s.locations) && s.camp && s.weather
+      && (data.phase === 'turn' || data.phase === 'newDay');
+    if (ok) return data;
+  } catch (err) { /* fall through */ }
+  clearSave();
+  return null;
+}
+
+function clearSave() {
+  try { localStorage.removeItem(SAVE_KEY); } catch (err) { /* ignore */ }
+  refreshContinueButton();
+}
+
+function refreshContinueButton() {
+  const btn = document.getElementById('continue-btn');
+  if (!btn) return;
+  const save = readSave();
+  btn.style.display = save ? 'block' : 'none';
+  if (save) btn.textContent = `▶️ เล่นต่อ (วันที่ ${save.state.day})`;
+}
+
+function continueSavedGame() {
+  const save = readSave();
+  if (!save) { refreshContinueButton(); return; }
+  try {
+    const s = save.state;
+    Object.assign(G, {
+      mode: 'single', isHost: false, roomCode: '', lobbyPlayers: [],
+      players: s.players, day: s.day, currentPlayer: s.currentPlayer,
+      dayDone: s.dayDone || [false,false,false,false],
+      thiefUsed: s.thiefUsed || [false,false,false,false],
+      locations: s.locations, camp: s.camp, weather: s.weather,
+      activeEvent: s.activeEvent || {}, mapEvent: s.mapEvent || null,
+      rescueData: s.rescueData || { attempts: [], lastChance: 0, success: false },
+      usedEventIds: s.usedEventIds || [], activeTraps: s.activeTraps || [],
+      combatState: null, isLoading: false
+    });
+
+    ['mode-selector-screen', 'online-lobby-panel', 'start-screen'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+    const app = document.getElementById('app');
+    if (app) {
+      app.style.pointerEvents = 'auto';
+      app.style.filter = 'none';
+    }
+
+    const wp = document.getElementById('week-progress');
+    if (wp) {
+      wp.innerHTML = Array.from({length:7},(_,i)=>`<div class="day-pip${i<G.day-1?' done':''}${i===G.day-1?' current':''}" id="pip${i}"></div>`).join('');
+    }
+    document.getElementById('day-badge').textContent = `วันที่ ${G.day} / 7`;
+    document.getElementById('weather-icon').textContent = G.weather.icon;
+    document.getElementById('weather-text').textContent = G.weather.text;
+    const evBox = document.getElementById('daily-event-box');
+    if (evBox && save.dailyEventHtml) evBox.innerHTML = save.dailyEventHtml;
+    const box = document.getElementById('story-box');
+    if (box) {
+      box.innerHTML = save.storyLog || '';
+      box.scrollTop = box.scrollHeight;
+    }
+
+    buildCraftList();
+    updateCampUI();
+    renderLocations();
+    renderAllPanels();
+    G.players.forEach((p, i) => {
+      if (!p.alive) document.getElementById(`panel-p${i}`)?.classList.add('dead');
+    });
+    addMsg(`💾 โหลดเกมที่บันทึกไว้ — วันที่ ${G.day}`, 'bubble-system');
+
+    if (save.phase === 'newDay') startDay();
+    else startTurn(G.currentPlayer);
+  } catch (err) {
+    console.error('Error loading save:', err);
+    clearSave();
+    alert('ไม่สามารถโหลดเกมที่บันทึกไว้ได้ — กรุณาเริ่มเกมใหม่');
+    location.reload();
+  }
+}
+
+window.continueSavedGame = continueSavedGame;
+refreshContinueButton();
+
 function getMyPlayerIndex() {
   if (!socket || G.mode !== 'multi' || !G.players) return 0;
   const idx = G.players.findIndex(p => p.id === socket.id);
@@ -874,6 +1005,8 @@ function initGame(playerName, playerJob) {
       app.style.filter = 'none';
     }
     
+    clearSave();
+
     // Reset G state
     G.day = 1;
     G.currentPlayer = 0;
@@ -1111,6 +1244,8 @@ function startTurn(pi) {
   try {
     const p = G.players[pi];
     if (!p.alive) { nextTurn(); return; }
+
+    saveGame('turn');
 
     if (!socket || G.isHost || G.mode !== 'multi') {
       // hunger/energy/thirst/sanity decay
@@ -2683,6 +2818,7 @@ function endDay() {
   const aliveCount = G.players.filter(p=>p.alive).length;
   if (aliveCount === 0) { gameEnd(false); return; }
 
+  saveGame('newDay');
   setTimeout(() => startDay(), 500);
 }
 
@@ -2701,6 +2837,7 @@ function killPlayer(pi) {
 }
 
 function gameEnd(survived) {
+  clearSave();
   const screen = document.getElementById('end-screen');
   screen.style.display = 'flex';
   const aliveP = G.players.filter(p=>p.alive);
