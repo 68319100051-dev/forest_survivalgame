@@ -73,15 +73,27 @@
     const r = rs();
     if (r.assigned) return;
     if (isMulti() && !s.isHost) return; // the host decides and syncs
-    const idx = s.players.map((_, i) => i).sort(() => Math.random() - 0.5);
-    const evil = idx.shift();
     s.players.forEach(p => { p.side = 'good'; delete p.neutralType; });
-    s.players[evil].side = 'evil';
-    if (idx.length >= 3 && Math.random() < NEUTRAL_CHANCE) {
+    // The card draw may have already rolled the local player's side (G.presetSide); keep exactly 1 evil
+    const preset = s.presetSide && s.players[0] && !isMulti() ? s.presetSide : null;
+    let idx = s.players.map((_, i) => i).filter(i => !preset || i !== 0).sort(() => Math.random() - 0.5);
+    if (preset) {
+      s.players[0].side = preset.side;
+      if (preset.side === 'neutral') s.players[0].neutralType = preset.neutralType;
+      r.revealed = true; // shown on the card already
+    }
+    if (!preset || preset.side !== 'evil') s.players[idx.shift()].side = 'evil';
+    const hasNeutral = preset && preset.side === 'neutral';
+    if (!preset && idx.length >= 3 && Math.random() < NEUTRAL_CHANCE) {
+      const n = idx.shift();
+      s.players[n].side = 'neutral';
+      s.players[n].neutralType = pick(Object.keys(NEUTRALS));
+    } else if (preset && !hasNeutral && preset.botNeutral && idx.length) {
       const n = idx.shift();
       s.players[n].side = 'neutral';
       s.players[n].neutralType = pick(Object.keys(NEUTRALS));
     }
+    delete s.presetSide;
     r.assigned = true;
     r.startGood = s.players.filter(p => p.side === 'good').length;
     s.players.forEach((p, i) => { r.suspicion[i] = 0; });
