@@ -4,43 +4,10 @@ const { Server } = require('socket.io');
 const path = require('path');
 
 const app = express();
-app.use(express.json());
 const server = http.createServer(app);
 const io = new Server(server);
 
 const PORT = process.env.PORT || 3000;
-
-// API Proxy
-app.post('/api/narrate', async (req, res) => {
-    if (!process.env.ANTHROPIC_API_KEY) {
-        return res.status(503).json({ error: 'No API key configured on server' });
-    }
-    try {
-        // Only forward the fields the game uses, with a capped token budget,
-        // so the proxy can't be used as an open relay for the server's API key
-        const { system, messages, temperature } = req.body || {};
-        const response = await fetch('https://api.anthropic.com/v1/messages', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-api-key': process.env.ANTHROPIC_API_KEY,
-                'anthropic-version': '2023-06-01'
-            },
-            body: JSON.stringify({
-                model: process.env.ANTHROPIC_MODEL || 'claude-haiku-5-5',
-                max_tokens: 500,
-                temperature: typeof temperature === 'number' ? temperature : 0.8,
-                system,
-                messages: Array.isArray(messages) ? messages.slice(-21) : []
-            })
-        });
-        
-        const data = await response.json();
-        res.status(response.status).json(data);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
 
 // Serve static files — only the game's front-end assets, never server code or config
 const PUBLIC_FILES = new Set(['/', '/index.html', '/game.js', '/events.js', '/fx.js', '/ui.js', '/style.css', '/ui.css', '/tutorial.js', '/tutorial.css']);

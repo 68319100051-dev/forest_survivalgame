@@ -84,47 +84,7 @@ function selectDifficulty(id) {
 }
 window.selectDifficulty = selectDifficulty;
 
-// ===================== API CONFIGURATION =====================
-let ANTHROPIC_API_KEY = localStorage.getItem('anthropic_api_key') || '';
-const ANTHROPIC_MODEL = 'claude-haiku-5-5'; // server may override via ANTHROPIC_MODEL env
-
 function clamp(v, mn, mx) { return Math.max(mn, Math.min(mx, v)); }
-
-const SYSTEM_PROMPT = `คุณคือ AI ผู้บรรยายเกมเอาชีวิตรอดในป่า ภาษาไทย เขียนแบบนิยายผจญภัย สั้น กระชับ ตื่นเต้น
-
-กฎสำคัญ:
-1. บรรยายผลของการกระทำ 2-3 ประโยค มีรายละเอียดเฉพาะของ/สถานที่
-2. ระบบมีค่า Sanity (ค่าสติ) หากผู้เล่นเจอเหตุการณ์สยองขวัญหรือโดดเดี่ยว ให้ลด Sanity
-3. ไอเท็ม "ขยะ" (เช่น เศษเหล็ก, ชิ้นส่วนวิทยุ, มอสเรืองแสง) มีความสำคัญมากในการคราฟอุปกรณ์ Tier สูงเพื่อชนะเกม
-4. ตอบ JSON เท่านั้น ตามรูปแบบนี้:
-
-{
-  "story": "บรรยายสั้นของการกระทำ",
-  "hpDelta": 0,
-  "hungerDelta": 0,
-  "thirstDelta": 0,
-  "energyDelta": 0,
-  "sanityDelta": 0,
-  "loot": [],
-  "wildlife": null,
-  "event": "none|good|bad",
-  "eventText": ""
-}`;
-
-/**
- * 2. ข้อแนะนำ: แจ้งเตือนเมื่อไม่มี API Key
- */
-function validateApiKey() {
-  if (!ANTHROPIC_API_KEY) {
-    console.warn("Offline Mode: No Anthropic API Key found. Using mock narrator.");
-  }
-}
-validateApiKey();
-
-/**
- * BUG-01: modePrompt (ReferenceError) - ย้ายมาประกาศให้เข้าถึงได้
- */
-const getModePrompt = () => `\nโหมดปัจจุบัน: ${G.mode === 'multi' ? 'ออนไลน์มัลติเพลเยอร์' : 'เล่นคนเดียวกับบอต'}`;
 
 // ===================== GAME STATE =====================
 // Dynamic daily events loaded from events.js
@@ -944,11 +904,6 @@ function initGameMultiplayer(roomData) {
     G.mode = 'multi';
     G.difficulty = 'normal';
     G.isHost = !!(roomData.players.find(p => p.id === socket?.id)?.isHost);
-    const keyInput = document.getElementById('api-key-input');
-    if (keyInput && keyInput.value.trim()) {
-      localStorage.setItem('anthropic_api_key', keyInput.value.trim());
-      window.ANTHROPIC_API_KEY = keyInput.value.trim();
-    }
     document.getElementById('start-screen').style.display = 'none';
     
     // Unlock main game interface
@@ -1020,11 +975,6 @@ function initGameMultiplayer(roomData) {
 
 function initGame(playerName, playerJob) {
   try {
-    const keyInput = document.getElementById('api-key-input');
-    if (keyInput && keyInput.value.trim()) {
-      localStorage.setItem('anthropic_api_key', keyInput.value.trim());
-      ANTHROPIC_API_KEY = keyInput.value.trim();
-    }
     document.getElementById('start-screen').style.display = 'none';
     
     // Unlock main game interface
@@ -2355,7 +2305,7 @@ function exploreLocation(pi, li) {
     return;
   }
 
-  const prompt = `${p.name} สำรวจ${loc.name} — อาชีพ: ${p.job.name} — พลังงาน:${p.energy}% — สภาพอากาศ:${G.weather.text}`;
+  const prompt = `${loc.emoji} ออกสำรวจ${loc.name} (${hoursCost} ชม.)`;
   callAI(pi, prompt, hoursCost, { loc });
 }
 
@@ -2441,7 +2391,7 @@ function doExploreMapEvent(pi, m, hoursCost, hasItem) {
     return;
   }
 
-  const prompt = `${p.name} สำรวจพื้นที่พิเศษ: ${m.name} — ${!hasItem ? 'ฝืนเข้าไปโดยไม่มี ' + m.requiredItem : 'ใช้อุปกรณ์ ' + m.requiredItem + ' เข้าไป'} — ต้องการของดีที่สุดในนี้`;
+  const prompt = `${m.emoji} บุกพื้นที่พิเศษ: ${m.name} — ${!hasItem ? 'ฝืนเข้าไปโดยไม่มี ' + m.requiredItem : 'ใช้ ' + m.requiredItem + ' นำทาง'}`;
   callAI(pi, prompt, hoursCost, { loc: m });
 }
 
@@ -2460,7 +2410,10 @@ function botExploreLocation(pi, li, hoursCost) {
   ];
   
   const outcome = outcomes[Math.floor(Math.random() * outcomes.length)];
-  
+  // Use the location's own narration lines so bot turns don't repeat the same sentence
+  const locLines = LOC_STORIES[loc.id];
+  if (locLines) outcome.story = pick(locLines[outcome.event === 'none' ? 'normal' : outcome.event]).replace(/\{n\}/g, p.name);
+
   let hpDelta = Math.round(outcome.hp * getDifficulty().animalDmg);
   let energyDelta = outcome.energy;
   
@@ -2536,6 +2489,92 @@ function botExploreLocation(pi, li, hoursCost) {
   spendTime(pi, hoursCost);
 }
 
+// ===================== NARRATOR (built-in, no external AI) =====================
+// Each location has its own lines for a good / normal / bad outcome. {n} = player name.
+const LOC_STORIES = {
+  cave: {
+    good:   ['{n} คลำทางเข้าไปในถ้ำ แสงสลัวจากรอยแยกบนเพดานส่องให้เห็นซอกหินที่มีของซ่อนอยู่', '{n} เจอโพรงแห้งลึกเข้าไปในถ้ำ อากาศเย็นสบาย ได้พักหายใจก่อนเก็บของกลับมา'],
+    normal: ['{n} เดินลัดเลาะผนังถ้ำที่ชื้นแฉะ เสียงน้ำหยดดังก้องไปทั่ว', '{n} ใช้เวลาไล่สำรวจทีละซอก กลิ่นอับชื้นทำให้หายใจไม่สะดวก'],
+    bad:    ['{n} ลื่นล้มบนหินเปียกในความมืด เข่ากระแทกพื้นอย่างแรง', 'ฝูงค้างคาวพุ่งออกมาจากความมืด {n} ตกใจจนหัวใจแทบหยุดเต้น'],
+  },
+  river: {
+    good:   ['{n} ลุยน้ำตื้นริมฝั่ง น้ำใสจนเห็นปลาว่ายวนอยู่รอบขา', '{n} เจอโขดหินกลางลำธารที่มีของติดค้างมาจากต้นน้ำ'],
+    normal: ['{n} เดินเลียบแม่น้ำ เสียงน้ำไหลช่วยให้ใจสงบลงบ้าง', '{n} ก้มลงล้างหน้าในแม่น้ำ แล้วค่อยๆ ค้นหาตามโคลนริมตลิ่ง'],
+    bad:    ['กระแสน้ำแรงกว่าที่คิด {n} เสียหลักจนเกือบถูกพัดไป', '{n} ถูกปลิงเกาะขาหลายตัวกว่าจะรู้ตัว'],
+  },
+  hut: {
+    good:   ['{n} รื้อตู้ไม้เก่าในกระท่อมร้าง เจอของใช้ที่ยังพอใช้ได้', 'ใต้พื้นกระดานที่ผุพัง {n} เจอกล่องที่ใครบางคนซ่อนไว้'],
+    normal: ['{n} ค้นกระท่อมทีละมุม ฝุ่นหนาจนต้องปิดจมูก', 'บนโต๊ะในกระท่อมมีบันทึกเก่าที่อ่านไม่ออกแล้ว {n} ค้นของต่ออย่างเงียบๆ'],
+    bad:    ['พื้นไม้ผุทรุดลงใต้เท้า {n} ขาติดอยู่ในช่องพื้นจนถลอก', 'มีบางอย่างเคลื่อนไหวในเงามืดของกระท่อม {n} รู้สึกขนลุกไปทั้งตัว'],
+  },
+  forest: {
+    good:   ['{n} แหวกพุ่มไม้เข้าไปเจอต้นไม้ผลดกรอเก็บอยู่', '{n} ตามเสียงนกไปจนพบลานโล่งที่อุดมไปด้วยของป่า'],
+    normal: ['{n} ฝ่ากิ่งไม้หนาทึบ แสงแดดลอดลงมาเป็นลำๆ', '{n} เดินตามทางสัตว์ในป่าทึบ ทุกก้าวต้องระวังรากไม้'],
+    bad:    ['{n} หลงวนอยู่ในป่าทึบนานกว่าจะหาทางออกเจอ', 'หนามแหลมเกี่ยวแขนขา {n} เป็นแผลยาวหลายแห่ง'],
+  },
+  cliff: {
+    good:   ['{n} ปีนขึ้นไปถึงยอดผา มองเห็นป่าทั้งผืน และอาจเห็นทางออก', '{n} เจอซอกผาที่มีของหายากติดอยู่'],
+    normal: ['{n} ไต่หน้าผาช้าๆ ลมแรงพัดจนต้องเกาะหินแน่น', '{n} สำรวจตามแนวหน้าผา เห็นรังนกอินทรีอยู่ไกลๆ'],
+    bad:    ['หินใต้มือ {n} หลุดร่วง จนเกือบพลัดตกลงไป', '{n} เท้าพลิกบนหินคมระหว่างปีนลง'],
+  },
+  swamp: {
+    good:   ['{n} พบพืชสมุนไพรหายากขึ้นอยู่กลางหนองน้ำ', 'แสงเรืองๆ จากมอสในหนองนำทาง {n} ไปเจอของดี'],
+    normal: ['{n} ย่ำโคลนลึกถึงเข่า กลิ่นเน่าของหนองลอยมาเป็นระยะ', '{n} ใช้ไม้แหย่นำทางทีละก้าวในหนองน้ำ'],
+    bad:    ['{n} จมโคลนลึกลงเรื่อยๆ กว่าจะดึงตัวขึ้นมาได้หมดแรงไปมาก', 'ยุงฝูงใหญ่รุมกัด {n} จนตัวบวมไปหมด'],
+  },
+  meadow: {
+    good:   ['ทุ่งหญ้ากว้างเปิดโล่ง {n} เดินสบายและเจอของหลายอย่าง', '{n} นอนพักในทุ่งหญ้าสักครู่ ลมเย็นช่วยให้สดชื่น'],
+    normal: ['{n} เดินลุยทุ่งหญ้าสูงท่วมเอว แมลงบินกรูออกมาตลอดทาง', '{n} มองไปรอบๆ ทุ่งเผื่อจะเห็นควันไฟหรือสัญญาณใดๆ'],
+    bad:    ['แดดในทุ่งโล่งร้อนจัด {n} เริ่มเวียนหัว', '{n} เหยียบรังมดแดงเข้าเต็มๆ'],
+  },
+  ruins: {
+    good:   ['{n} คุ้ยซากอาคารเก่า เจอชิ้นส่วนที่น่าจะเอาไปประกอบอะไรได้', 'ในห้องที่ยังไม่พังของซากอาคาร {n} เจอตู้เหล็กที่ยังไม่มีใครเปิด'],
+    normal: ['{n} ค่อยๆ ปีนข้ามกองปูนและเหล็กเส้นที่ระเกะระกะ', 'ซากอาคารเงียบสงัด {n} ได้ยินแต่เสียงลมพัดผ่านช่องหน้าต่าง'],
+    bad:    ['ผนังปูนถล่มลงมาข้างตัว {n} เศษหินกระเด็นโดนเต็มๆ', '{n} โดนเศษเหล็กสนิมบาดมือ'],
+  },
+  waterfall: {
+    good:   ['ละอองน้ำตกเย็นชื่นใจ {n} จับปลาในแอ่งน้ำได้ง่ายดาย', 'หลังม่านน้ำตก {n} เจอโพรงที่มีของซ่อนอยู่'],
+    normal: ['เสียงน้ำตกดังสนั่น {n} เดินหาของตามโขดหินลื่นๆ', '{n} นั่งพักริมแอ่งน้ำ ก่อนจะค้นรอบๆ น้ำตก'],
+    bad:    ['{n} ลื่นตกลงแอ่งน้ำเย็นเฉียบ ตัวสั่นไปหมด', 'หินลื่นใต้น้ำตกทำให้ {n} ล้มกระแทก'],
+  },
+  temple: {
+    good:   ['{n} เข้าไปในวัดร้าง เจอแท่นบูชาที่ยังมีของถวายเก่าวางอยู่', 'แสงแดดลอดผ่านหลังคาที่พังลงมาบนสิ่งของล้ำค่าตรงหน้า {n}'],
+    normal: ['รูปปั้นเก่าแก่จ้องมองมา {n} รู้สึกเหมือนถูกจับตาดู', '{n} เดินสำรวจระเบียงวัดที่รากไม้ชอนไชจนพัง'],
+    bad:    ['เสียงกระซิบดังมาจากในโบสถ์ {n} วิ่งออกมาแทบไม่ทัน', '{n} ฝันร้ายกลางวันในวัดร้าง จนสติเริ่มรวน'],
+  },
+  orchard: {
+    good:   ['สวนผลไม้ป่าเต็มไปด้วยผลสุก {n} เก็บได้เต็มมือ', '{n} เจอรังผึ้งที่ห้อยต่ำ น้ำผึ้งหยดหวานฉ่ำ'],
+    normal: ['{n} เดินเก็บผลไม้ ต้องระวังผึ้งที่บินวนอยู่รอบๆ', 'กลิ่นผลไม้สุกหอมไปทั่ว {n} ค่อยๆ เลือกเก็บลูกที่ดูกินได้'],
+    bad:    ['ผึ้งทั้งรังรุมต่อย {n} จนต้องวิ่งหนี', '{n} ปีนต้นไม้เก็บผลแล้วกิ่งหัก ตกลงมากระแทกพื้น'],
+  },
+  graveyard: {
+    good:   ['{n} คุ้ยกองเครื่องจักรเก่า เจออะไหล่ที่ยังพอใช้ได้', 'ในห้องเครื่องที่ล็อกไว้ {n} เจอของที่ยังอยู่ในสภาพดี'],
+    normal: ['สนิมและน้ำมันเครื่องเลอะเต็มมือ {n} ค้นหาของต่อไป', '{n} เดินผ่านซากรถที่ถูกต้นไม้กลืนจนเกือบมองไม่เห็น'],
+    bad:    ['{n} ถูกแผ่นเหล็กคมบาดขาเป็นแผลลึก', 'เครื่องจักรเก่าล้มทับ {n} ดึงตัวออกมาได้อย่างทุลักทุเล'],
+  },
+  mystery: {
+    good:   ['{n} ฝ่าความมืดเข้าไปจนพบสมบัติที่ถูกลืมมานาน', 'สิ่งที่ {n} พบทำให้หัวใจเต้นแรง มันคือของที่หาไม่ได้ที่ไหนอีกแล้ว'],
+    normal: ['{n} สำรวจพื้นที่ลึกลับอย่างระมัดระวัง ทุกเงาดูน่ากลัว', 'ทางเดินคดเคี้ยวพา {n} ลึกเข้าไปเรื่อยๆ'],
+    bad:    ['กับดักโบราณทำงาน {n} หลบได้แต่ยังโดนเฉี่ยว', 'ความมืดและความเงียบทำให้ {n} เริ่มหวาดผวา'],
+  },
+};
+const GOOD_TEXT = ['สิ่งดีๆ เกิดขึ้น', 'โชคเข้าข้าง!', 'วันนี้ป่าใจดี', 'เจอของดีเกินคาด'];
+const BAD_TEXT  = ['ประสบความยากลำบาก', 'ป่าไม่ปรานี', 'โชคไม่ดีเลย', 'ต้องระวังมากกว่านี้'];
+
+// Free-typed or bot "independent" actions, matched by keyword
+const FREE_ACTIONS = [
+  { re: /ตกปลา|จับปลา|ปลา/, loot: ['ปลา', 'กุ้งฝอย'], good: '{n} ทำเบ็ดจากกิ่งไม้ นั่งรออย่างอดทนจนปลาติด', bad: '{n} นั่งรอปลาทั้งชั่วโมงแต่ไม่มีอะไรมากิน' },
+  { re: /ล่า|แกะรอย|ดักสัตว์|กับดัก/, loot: ['กระต่าย', 'ไก่ป่า', 'กบ'], good: '{n} แกะรอยสัตว์ได้อย่างแม่นยำ และได้เหยื่อมา', bad: 'รอยสัตว์พา {n} วนไปมาจนเหนื่อยเปล่า' },
+  // checked in order, so "ปีน…มองหา" lands here before the generic search entry below
+  { re: /ปีน|มอง|สัญญาณ|ควันไฟ|เรียง/, loot: [], sanity: 6, good: '{n} มองเห็นภูมิประเทศไกลออกไป ความหวังว่าจะรอดกลับมาอีกครั้ง', bad: '{n} มองไปจนสุดสายตา แต่ไม่เห็นวี่แววของใครเลย' },
+  { re: /ขุด|ค้น|หา|เก็บ/, loot: ['ไม้', 'หิน', 'สมุนไพร', 'เชือก', 'เห็ด'], good: '{n} ค้นหาอย่างละเอียด และเจอของที่มีประโยชน์', bad: '{n} ขุดคุ้ยจนมือพอง แต่ไม่ได้อะไรเลย' },
+  { re: /ซ่อม|สร้าง|ประดิษฐ์|ดัดแปลง/, loot: [], sanity: 4, good: '{n} ลงมือซ่อมของอย่างตั้งใจ ผลงานออกมาดีเกินคาด', bad: 'ของที่ {n} พยายามซ่อมพังคามือ' },
+  { re: /พัก|นอน|นั่ง|สวด|ร้องเพลง|สมาธิ/, loot: [], sanity: 10, energy: 10, good: '{n} หยุดพักใจ ความกังวลค่อยๆ เบาลง', bad: '{n} พยายามพัก แต่เสียงป่ารอบตัวทำให้ข่มตาไม่ลง' },
+];
+
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function rollRange(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
+
 // Bot wildlife encounter: simulate the same fight a player would have and only
 // commit to it when the bot can win without ending up badly hurt; otherwise run.
 function botFightOrFlee(pi, wild) {
@@ -2580,26 +2619,52 @@ function botFightOrFlee(pi, wild) {
 function mockNarrateAction(pi, action, meta={}) {
   const p = G.players[pi];
   const loc = meta.loc;
-  
-  const stories = [
-    { story: `${p.name} ทำหน้าที่อย่างเต็มไปด้วยความเฉียบแหลม`, hp: 0, hunger: -3, thirst: -8, energy: -5, loot: [], event: 'none' },
-    { story: `${p.name} ประสบความสำเร็จในความพยายามของตัวเอง`, hp: 5, hunger: -2, thirst: -5, energy: -4, loot: loc?.loot ? [loc.loot[Math.floor(Math.random()*loc.loot.length)]] : [], event: 'good' },
-    { story: `${p.name} พบเรื่องที่น่าสนใจแต่ยังต้องระมัดระวัง`, hp: -5, hunger: -5, thirst: -10, energy: -8, loot: [], event: 'bad' },
-    { story: `${p.name} ขอบคุณที่เก็บตัวอย่างสมุนไพรจากสถานที่นี้`, hp: 0, hunger: -1, thirst: -4, energy: -6, loot: loc?.loot ? [loc.loot[Math.floor(Math.random()*loc.loot.length)]] : [], event: 'good' },
-  ];
+  const fill = s => s.replace(/\{n\}/g, p.name);
+  const weatherBad = G.weather && ['🌧️', '⛈️', '🌫️'].includes(G.weather.icon);
 
-  const story = stories[Math.floor(Math.random() * stories.length)];
-  
+  // Outcome odds: danger, weather and exhaustion make things worse; luck/sanity helps
+  const danger = loc ? (loc.danger || 0.3) : 0.2;
+  let badChance = danger * 0.6 + (weatherBad ? 0.1 : 0) + (p.energy < 20 ? 0.1 : 0);
+  let goodChance = 0.35 + (p.sanity > 70 ? 0.05 : 0) + (p.job && (p.job.id === 'scout' || p.job.id === 'hunter') ? 0.05 : 0);
+  const r = Math.random();
+  const outcome = r < badChance ? 'bad' : r < badChance + goodChance ? 'good' : 'normal';
+
+  let story, loot = [], hp = 0, sanity = 0, energy = -rollRange(5, 9);
+  const hunger = -rollRange(2, 5), thirst = -rollRange(5, 10);
+
+  if (loc) {
+    const lines = LOC_STORIES[loc.id] || LOC_STORIES.mystery;
+    story = fill(pick(lines[outcome]));
+    const pool = loc.loot || [];
+    const n = outcome === 'good' ? rollRange(1, 2) : outcome === 'normal' ? (Math.random() < 0.65 ? 1 : 0) : (Math.random() < 0.25 ? 1 : 0);
+    for (let i = 0; i < n && pool.length; i++) loot.push(pick(pool));
+  } else {
+    const kind = FREE_ACTIONS.find(a => a.re.test(action || ''));
+    if (kind) {
+      story = fill(outcome === 'bad' ? kind.bad : kind.good);
+      if (outcome !== 'bad' && kind.loot.length && Math.random() < 0.7) loot.push(pick(kind.loot));
+      if (outcome !== 'bad') { sanity += kind.sanity || 0; energy += kind.energy || 0; }
+    } else {
+      story = fill(outcome === 'bad' ? '{n} ลองทำตามที่คิดไว้ แต่สถานการณ์ไม่เป็นใจเลย'
+        : outcome === 'good' ? '{n} ลงมือทำตามแผน และมันได้ผลดีกว่าที่คิด'
+        : '{n} ใช้เวลาไปกับสิ่งที่ตั้งใจ ไม่มีอะไรพิเศษเกิดขึ้น');
+    }
+  }
+
+  if (outcome === 'good') { hp += rollRange(0, 5); sanity += 3; }
+  if (outcome === 'bad')  { hp -= Math.round(rollRange(4, 9) * (0.6 + danger)); sanity -= rollRange(3, 7); }
+
   return {
-    story: story.story,
-    hpDelta: story.hp,
-    hungerDelta: story.hunger,
-    thirstDelta: story.thirst,
-    energyDelta: story.energy,
-    loot: story.loot,
-    wildlife: loc?.wild ? (Math.random() < 0.3 * (G.activeEvent.wildMult || 1) ? loc.wild[Math.floor(Math.random()*loc.wild.length)] : null) : null,
-    event: story.event,
-    eventText: story.event === 'good' ? '✨ สิ่งดีๆ เกิดขึ้น' : story.event === 'bad' ? '⚠️ ประสบความยากลำบาก' : ''
+    story,
+    hpDelta: hp,
+    hungerDelta: hunger,
+    thirstDelta: thirst,
+    energyDelta: energy,
+    sanityDelta: sanity,
+    loot,
+    wildlife: loc?.wild ? (Math.random() < 0.3 * (G.activeEvent.wildMult || 1) ? pick(loc.wild) : null) : null,
+    event: outcome === 'normal' ? 'none' : outcome,
+    eventText: outcome === 'good' ? pick(GOOD_TEXT) : outcome === 'bad' ? pick(BAD_TEXT) : ''
   };
 }
 
@@ -2648,7 +2713,9 @@ function processActionResult(pi, parsed, meta, hoursCost) {
     }
   }
 
-  if (finalLoot.length && (!parsed.wildlife || !p.isBot)) {
+  // A human who meets an animal gets this loot from the fight instead (initiateCombat),
+  // so only hand it out now when there is no fight to resolve.
+  if (finalLoot.length && (!parsed.wildlife || p.isBot)) {
     finalLoot.forEach(item => addToInventory(pi, item));
     addMsg(`🎒 ได้รับ: ${finalLoot.join(', ')}`, 'bubble-event-good');
   }
@@ -2692,6 +2759,8 @@ function applyExploreStatusEffects(pi) {
   }
 }
 
+// Narrates an action with the built-in narrator. Kept async with a short pause so
+// the typing dots show and the result doesn't appear instantly.
 async function callAI(pi, action, hoursCost, meta={}) {
   if (G.isLoading) return;
   G.isLoading = true;
@@ -2700,47 +2769,10 @@ async function callAI(pi, action, hoursCost, meta={}) {
   const p = G.players[pi];
   addMsg(`${p.emoji} ${p.name}: ${action}`, 'bubble-player');
 
-  const messages = [
-    ...p.history,
-    { role:'user', content:`การกระทำ: "${action}"\nStats: HP:${p.hp}, ความหิว:${p.hunger}, ความกระหาย:${p.thirst}, พลังงาน:${p.energy}, สติ:${p.sanity}\nวันที่:${G.day} ชม.เหลือ:${p.hoursLeft}${G.activeEvent?.name ? `\nเหตุการณ์วันนี้: ${G.activeEvent.name}` : ''}` }
-  ];
-
   showTyping();
-  try {
-    const res = await fetch('/api/narrate', {
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json'
-      },
-      body: JSON.stringify({
-        model: ANTHROPIC_MODEL,
-        temperature: 0.8,
-        max_tokens: 500,
-        system: SYSTEM_PROMPT + getModePrompt(),
-        messages: messages
-      })
-    });
-    
-    if (!res.ok) throw new Error('API Error');
-    const data = await res.json();
-    const raw = data.content?.[0]?.text || '{}';
-    let parsed;
-    try {
-      const jsonMatch = raw.match(/\{[\s\S]*\}/);
-      parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : { story: raw };
-    } catch (e) { parsed = { story: raw }; }
-
-    removeTyping();
-    p.history.push({role:'user',content:messages[messages.length-1].content}, {role:'assistant',content:raw});
-    if (p.history.length > 20) p.history = p.history.slice(-20);
-
-    processActionResult(pi, parsed, meta, hoursCost);
-  } catch(err) {
-    console.warn('API fallback:', err.message);
-    removeTyping();
-    const parsed = mockNarrateAction(pi, action, meta);
-    processActionResult(pi, parsed, meta, hoursCost);
-  }
+  await new Promise(r => setTimeout(r, p.isBot ? 350 : 600 + Math.random() * 500));
+  removeTyping();
+  processActionResult(pi, mockNarrateAction(pi, action, meta), meta, hoursCost);
 }
 
 // ===================== COMBAT ENGINE =====================
@@ -3886,15 +3918,8 @@ document.getElementById('custom-in')?.addEventListener('keydown', e => { if(e.ke
 
 // Start screen triggering
 document.addEventListener('DOMContentLoaded', () => {
-    // API Key Auto-load
-    const keyInput = document.getElementById('api-key-input');
-    if (keyInput) {
-        const savedKey = localStorage.getItem('anthropic_api_key');
-        if (savedKey) {
-            keyInput.value = savedKey;
-            window.ANTHROPIC_API_KEY = savedKey;
-        }
-    }
+    // Older versions stored an Anthropic API key in the browser; clear it
+    try { localStorage.removeItem('anthropic_api_key'); } catch (e) { /* storage blocked */ }
 
     // Direct JS Event Binding to avoid HTML reference errors
     const startBtn = document.getElementById('start-btn');
