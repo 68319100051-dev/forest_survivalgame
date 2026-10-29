@@ -743,3 +743,13 @@ body::before {
   .end-award-card[style*="span 2"] { grid-column: auto !important; }
   [class*="end-awards"], #end-awards { grid-template-columns: 1fr !important; }
 }
+
+/* ── Difficulty picker (single player start screen) ── */
+#difficulty-picker{display:flex;flex-direction:column;gap:6px;margin-top:4px;}
+#difficulty-picker .diff-label{font-size:11px;color:var(--text3);text-align:center;letter-spacing:1px;}
+#difficulty-picker .diff-row{display:flex;gap:6px;}
+#difficulty-picker .diff-btn{flex:1;padding:7px 4px;background:var(--bg4);border:1px solid var(--border);border-radius:6px;color:var(--text2);font-size:12px;font-family:inherit;cursor:pointer;transition:border-color .2s,background .2s,color .2s;}
+#difficulty-picker .diff-btn:hover{border-color:var(--green2);}
+#difficulty-picker .diff-btn.active{border-color:var(--green2);background:rgba(72,200,130,0.12);color:var(--green2);font-weight:600;}
+#difficulty-picker .diff-btn[data-diff="hard"].active{border-color:var(--red2);background:rgba(220,80,80,0.12);color:var(--red2);}
+#difficulty-picker .diff-desc{font-size:10px;color:var(--text3);text-align:center;min-height:14px;}
