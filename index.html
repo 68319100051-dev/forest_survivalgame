@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="ui.css">
+<link rel="stylesheet" href="tutorial.css">
 </head>
 <body>
 
@@ -34,6 +35,9 @@
       <p style="font-size:11px;color:var(--text3);line-height:1.4;">เล่นออนไลน์กับเพื่อน (Beta)<br>ระบบรอเทิร์นและซิงค์ข้อมูล</p>
     </div>
   </div>
+
+  <!-- Continue a saved single-player run (shown by refreshContinueButton() when a save exists) -->
+  <button id="continue-btn" class="screen-btn" onclick="continueSavedGame()" style="display:none;width:min(90%,500px);margin:0;background:var(--green2);color:var(--bg);font-size:16px;">▶️ เล่นต่อ</button>
 
   <!-- Multiplayer Options (Hidden initially) -->
   <div id="multi-options" style="display:none; flex-direction:column; gap:12px; width:300px; margin-top:20px;">
@@ -91,6 +95,15 @@
   
   <div id="lobby-input-area" style="display:flex;flex-direction:column;gap:10px;width:min(90%,280px);">
     <input id="player-name-input" type="text" placeholder="ใส่ชื่อของคุณ..." style="width:100%;padding:8px 10px;background:var(--bg4);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;outline:none;text-align:center;" />
+    <div id="difficulty-picker">
+      <div class="diff-label">ระดับความยาก</div>
+      <div class="diff-row">
+        <button type="button" class="diff-btn" data-diff="easy" onclick="selectDifficulty('easy')">🌱 ง่าย</button>
+        <button type="button" class="diff-btn active" data-diff="normal" onclick="selectDifficulty('normal')">🌲 ปกติ</button>
+        <button type="button" class="diff-btn" data-diff="hard" onclick="selectDifficulty('hard')">💀 ยาก</button>
+      </div>
+      <div id="difficulty-desc" class="diff-desc">สมดุล เหมาะกับการเล่นครั้งแรก</div>
+    </div>
   </div>
 
   <div id="character-sequence">
@@ -281,7 +294,9 @@
 <script src="events.js" defer></script>
 <script src="game.js" defer></script>
 <script src="fx.js" defer></script>
+<script src="assets/gameplay.js" defer></script>
 <script src="ui.js" defer></script>
+<script src="tutorial.js" defer></script>
 
 </body>
 </html>

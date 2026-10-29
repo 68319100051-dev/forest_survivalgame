@@ -10,7 +10,7 @@ const io = new Server(server);
 const PORT = process.env.PORT || 3000;
 
 // Serve static files — only the game's front-end assets, never server code or config
-const PUBLIC_FILES = new Set(['/', '/index.html', '/game.js', '/events.js', '/fx.js', '/ui.js', '/style.css', '/ui.css']);
+const PUBLIC_FILES = new Set(['/', '/index.html', '/game.js', '/events.js', '/fx.js', '/ui.js', '/style.css', '/ui.css', '/tutorial.js', '/tutorial.css']);
 app.use((req, res, next) => {
     if (req.method === 'GET' && !PUBLIC_FILES.has(req.path) && !req.path.startsWith('/assets/') && !req.path.startsWith('/socket.io/')) {
         return res.status(404).end();
