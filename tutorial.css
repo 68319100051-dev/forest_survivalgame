@@ -1,0 +1,49 @@
+/* ===================== TUTORIAL COACH MARKS ===================== */
+/* above the turn banner (1700), below cutscenes (2000) */
+#tut-root { position: fixed; inset: 0; z-index: 1800; display: none; }
+#tut-root.show { display: block; }
+#tut-blocker { position: absolute; inset: 0; }
+#tut-spot {
+  position: fixed; border-radius: 10px; pointer-events: none;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, .72), 0 0 0 2px var(--amber2, #e8a830), 0 0 24px rgba(232, 168, 48, .55);
+  transition: left .25s ease, top .25s ease, width .25s ease, height .25s ease;
+}
+#tut-tip {
+  position: fixed; box-sizing: border-box; padding: 14px 16px 12px;
+  background: var(--bg3, #16201a); color: var(--text, #e8efe6);
+  border: 1px solid var(--amber2, #e8a830); border-radius: 14px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, .7);
+  font-family: 'Noto Sans Thai', sans-serif;
+  transition: left .25s ease, top .25s ease;
+}
+#tut-tip.pop { animation: tutPop .3s cubic-bezier(.2, 1.4, .4, 1); }
+#tut-count { font-size: 10px; letter-spacing: 1px; color: var(--text3, #8a9a80); margin-bottom: 2px; }
+#tut-title { font-size: 16px; font-weight: 700; color: var(--amber2, #e8a830); margin-bottom: 6px; }
+#tut-text { font-size: 13px; line-height: 1.6; color: var(--text2, #c5d2c0); }
+#tut-btns { display: flex; gap: 8px; margin-top: 12px; align-items: center; }
+#tut-btns button {
+  font: 600 12px 'Noto Sans Thai', sans-serif; border-radius: 8px; padding: 7px 12px; cursor: pointer;
+  border: 1px solid var(--border, #2c3a30); background: var(--bg4, #1e2a22); color: var(--text2, #c5d2c0);
+}
+#tut-skip { background: transparent !important; border-color: transparent !important; color: var(--text3, #8a9a80) !important; padding-left: 0 !important; }
+#tut-back { margin-left: auto; }
+#tut-next { background: var(--amber, #c8861a) !important; border-color: var(--amber2, #e8a830) !important; color: #1a1206 !important; min-width: 84px; }
+#tut-btns button:focus-visible { outline: 2px solid var(--amber2, #e8a830); outline-offset: 2px; }
+
+#tut-help-btn {
+  font: 600 12px 'Noto Sans Thai', sans-serif; white-space: nowrap; cursor: pointer;
+  padding: 3px 10px; border-radius: 6px; border: 1px solid var(--border, #2c3a30);
+  background: var(--bg2, #101612); color: var(--text2, #c5d2c0);
+}
+#tut-help-btn:hover { border-color: var(--amber2, #e8a830); color: var(--amber2, #e8a830); }
+
+@keyframes tutPop { from { opacity: 0; transform: translateY(8px) scale(.96); } }
+
+@media (max-width: 520px) {
+  #tut-text { font-size: 12px; }
+  #tut-help-btn { font-size: 11px; padding: 3px 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #tut-tip.pop { animation: none; }
+  #tut-spot, #tut-tip { transition: none; }
+}
