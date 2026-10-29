@@ -134,10 +134,14 @@
     const notes = [];
     const c = {
       p, pi,
-      has: it => p.inventory.includes(it),
-      hasAny: list => list.some(it => p.inventory.includes(it)),
+      // basic materials live in the team pouch (G.mats), everything else in the bag
+      has: it => p.inventory.includes(it) || (isBasicMat(it) && matCount(it) > 0),
+      hasAny: list => list.some(it => p.inventory.includes(it) || (isBasicMat(it) && matCount(it) > 0)),
       food: () => p.inventory.find(it => isFood(it) && !['ผลไม้มีพิษ', 'น้ำเน่า', 'อาหารอาบยาพิษ'].includes(it)),
-      take: it => { const k = p.inventory.indexOf(it); if (k > -1) { p.inventory.splice(k, 1); notes.push(`-${it}`); return true; } return false; },
+      take: it => {
+        if (isBasicMat(it) && !p.inventory.includes(it) && matCount(it) > 0) { s.mats[it]--; notes.push(`-${it}`); return true; }
+        const k = p.inventory.indexOf(it); if (k > -1) { p.inventory.splice(k, 1); notes.push(`-${it}`); return true; } return false;
+      },
       give: it => { if (addToInventory(pi, it)) notes.push(`+${it}`); },
       toCamp: it => { s.camp.sharedItems.push(it); notes.push(`📦+${it}`); },
       hp: d => { p.hp = cl(p.hp + d, 0, 100); notes.push(`❤️${d > 0 ? '+' : ''}${d}`); },

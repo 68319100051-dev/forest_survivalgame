@@ -1,15 +1,15 @@
 // ===================== DATA =====================
 const JOBS = [
-  { id:'hunter',    name:'นักล่า',      emoji:'🏹', skill:'ล่าสัตว์ได้ทันที (ใช้ได้ 1 ครั้ง/เกม)',     skDesc:'ล่าสัตว์' },
-  { id:'doctor',    name:'หมอ',         emoji:'🩺', skill:'รักษาทุกคนในกลุ่ม HP +50 (ใช้ได้ 1 ครั้ง/เกม)', skDesc:'รักษากลุ่ม' },
-  { id:'thief',     name:'โจร',         emoji:'🗡️', skill:'ขโมยไอเทม 2 ชิ้นจากใครก็ได้ (ใช้ได้ 1 ครั้ง/เกม)', skDesc:'ขโมยคู่' },
-  { id:'chef',      name:'พ่อครัว',     emoji:'🍳', skill:'เสกอาหารอุ่น 3 กล่องให้กลุ่ม (ใช้ได้ 1 ครั้ง/เกม)', skDesc:'เสกอาหาร' },
-  { id:'scout',     name:'ลูกเสือ',     emoji:'🧭', skill:'เปิดเผย Loot ของทุกที่ในวันนี้ (ใช้ได้ 1 ครั้ง/เกม)',              skDesc:'สแกนพื้นที่' },
-  { id:'soldier',   name:'ทหาร',        emoji:'⚔️', skill:'กำจัดสัตว์ป่าในพื้นที่ปัจจุบันทันที (ใช้ได้ 1 ครั้ง/เกม)',  skDesc:'ปราบบอส' },
-  { id:'shaman',    name:'หมอผี',       emoji:'🪄', skill:'พยากรณ์อากาศและเหตุการณ์ 3 วันข้างหน้า (ใช้ได้ 1 ครั้ง/เกม)',   skDesc:'หยั่งรู้' },
-  { id:'engineer',  name:'วิศวกร',      emoji:'🔧', skill:'สร้างสิ่งปลูกสร้างแคมป์ 1 อย่างฟรี (ใช้ได้ 1 ครั้ง/เกม)',    skDesc:'สร้างฟรี' },
-  { id:'merchant',  name:'พ่อค้า',      emoji:'💰', skill:'แลกไอเทมในตัวกับคลังแคมป์ได้ 3 ชิ้น (ใช้ได้ 1 ครั้ง/เกม)',    skDesc:'เทรดด่วน' },
-  { id:'spy',       name:'สายลับ',      emoji:'🕵️', skill:'ดูบทบาทและของทุกคน (ใช้ได้ 1 ครั้ง/เกม)',       skDesc:'เปิดเผยความลับ' },
+  { id:'hunter',    name:'นักล่า',      emoji:'🏹', skill:'ล่าสัตว์ได้ทันที (วันละ 1 ครั้ง)',     skDesc:'ล่าสัตว์' },
+  { id:'doctor',    name:'หมอ',         emoji:'🩺', skill:'รักษาทุกคนในกลุ่ม HP +50 (วันละ 1 ครั้ง)', skDesc:'รักษากลุ่ม' },
+  { id:'thief',     name:'โจร',         emoji:'🗡️', skill:'ขโมยไอเทม 2 ชิ้นจากใครก็ได้ (วันละ 1 ครั้ง)', skDesc:'ขโมยคู่' },
+  { id:'chef',      name:'พ่อครัว',     emoji:'🍳', skill:'เสกอาหารอุ่น 3 กล่องให้กลุ่ม (วันละ 1 ครั้ง)', skDesc:'เสกอาหาร' },
+  { id:'scout',     name:'ลูกเสือ',     emoji:'🧭', skill:'สแกนพื้นที่: วันนี้สำรวจได้ผลดีเสมอ ไม่เจอสัตว์ป่า และเห็นอันตรายทุกที่ (วันละ 1 ครั้ง)',              skDesc:'สแกนพื้นที่' },
+  { id:'soldier',   name:'ทหาร',        emoji:'⚔️', skill:'เคลียร์เส้นทาง: ทั้งทีมไม่เจอสัตว์ป่าตลอดวันนี้ + ได้เนื้อสัตว์ (วันละ 1 ครั้ง)',  skDesc:'ปราบบอส' },
+  { id:'shaman',    name:'หมอผี',       emoji:'🪄', skill:'พยากรณ์อากาศ 3 วันข้างหน้าได้แม่นยำ + ทุกคนค่าสติ +15 (วันละ 1 ครั้ง)',   skDesc:'หยั่งรู้' },
+  { id:'engineer',  name:'วิศวกร',      emoji:'🔧', skill:'เลือกสร้างสิ่งปลูกสร้างแคมป์ 1 อย่างฟรี (วันละ 1 ครั้ง) · ติดตัว: คราฟเร็วขึ้น 1 ชม. ซ่อมของได้',    skDesc:'สร้างฟรี' },
+  { id:'merchant',  name:'พ่อค้า',      emoji:'💰', skill:'เลือกแลกของกับคลังแคมป์ได้ 3 ชิ้น หรือขายของมีค่าเป็นวัสดุ (วันละ 1 ครั้ง)',    skDesc:'เทรดด่วน' },
+  { id:'spy',       name:'สายลับ',      emoji:'🕵️', skill:'ส่องฝ่ายลับของคน 1 คน และดูของในกระเป๋าเขา (วันละ 1 ครั้ง)',       skDesc:'เปิดเผยความลับ' },
 ];
 
 const LOCATIONS = [
@@ -17,7 +17,7 @@ const LOCATIONS = [
   { id:'river',    name:'แม่น้ำ',         emoji:'🌊', time:4,  danger:0.2, desc:'น้ำดื่ม ปลา ยา', loot:['ปลา','น้ำสะอาด','สมุนไพร','หิน','กุ้งฝอย','หอยเชลล์','สาหร่ายผูกเชือก'], wild:['จระเข้','งูน้ำ'] },
   { id:'hut',      name:'กระท่อมร้าง',    emoji:'🛖', time:5,  danger:0.3, desc:'ของใช้เก่า อาหาร อุปกรณ์', loot:['มีด','ไม้ขีดไฟ','อาหารกระป๋อง','เชือก','ผ้า','กระทะเก่า','เมล็ดพืช'], wild:['หมาจิ้งจอก','งู'] },
   { id:'forest',   name:'ป่าทึบ',         emoji:'🌳', time:5,  danger:0.35,desc:'ผลไม้ ไม้ สมุนไพร', loot:['ผลไม้','ผลไม้มีพิษ','ไม้','สมุนไพร','เห็ด','รวงผึ้ง','ไก่ป่า','ไข่นก'], wild:['หมูป่า','เสือ','งูพิษ'] },
-  { id:'cliff',    name:'หน้าผาสูง',      emoji:'🏔️', time:7,  danger:0.45,desc:'มองเห็นไกล แต่อันตราย', loot:['หิน','สัญญาณขอความช่วยเหลือ','แร่หายาก','ขนมกอินทรี','พลอย','เถาวัลย์'], wild:['นกอินทรี','แมวป่า'] },
+  { id:'cliff',    name:'หน้าผาสูง',      emoji:'🏔️', time:7,  danger:0.45,desc:'มองเห็นไกล แต่อันตราย', loot:['หิน','สัญญาณขอความช่วยเหลือ','แร่หายาก','ขนนกอินทรี','พลอย','เถาวัลย์'], wild:['นกอินทรี','แมวป่า'] },
   { id:'swamp',   name:'หนองน้ำ',         emoji:'🌿', time:5,  danger:0.3, desc:'พืชยา แต่เสี่ยงป่วย', loot:['สมุนไพรหายาก','น้ำเน่า','กบ','ดินเหนียว','ไข่จระเข้','มอสเรืองแสง'], wild:['งูพิษ','จระเข้'] },
   { id:'meadow',  name:'ทุ่งหญ้า',        emoji:'🌾', time:3,  danger:0.1, desc:'เปิดโล่ง หาสัญญาณได้ง่าย', loot:['หญ้าแห้ง','แมลง','ดอกไม้ยา','กระต่าย','ดอกไม้ป่า','รังตั๊กแตน'], wild:['กระต่าย','กวาง'] },
   { id:'ruins',   name:'ซากอาคาร',        emoji:'🏚️', time:6,  danger:0.35,desc:'ของเก่า แต่เสี่ยงพัง', loot:['โลหะเก่า','แก้ว','เชือก','อาหารเก่า','ชิ้นส่วนวิทยุ','แบตเตอรี่เสื่อม','เศษเหล็ก'], wild:['สุนัขจรจัด','แมลงพิษ'] },
@@ -27,21 +27,65 @@ const LOCATIONS = [
   { id:'graveyard',name:'สุสานเครื่องจักร', emoji:'⚙️', time:7,  danger:0.4, desc:'ขยะเหล็กและแบตเตอรี่', loot:['เศษเหล็ก','โลหะเก่า','แก้ว','แบตเตอรี่เสื่อม','ตะเกียงเก่า'], wild:['สุนัขจรจัด','แมลงพิษ'] },
 ];
 
+// ===================== CRAFTING DATA =====================
+// Basic materials live in the team's material pouch (G.mats) as counts, not in the 5-slot bag.
+const BASIC_MATS = ['ไม้','หิน','เชือก','ผ้า','สมุนไพร','โลหะเก่า','หญ้าแห้ง'];
+const MAT_ICON = { 'ไม้':'🪵', 'หิน':'🪨', 'เชือก':'🪢', 'ผ้า':'🧵', 'สมุนไพร':'🌿', 'โลหะเก่า':'🔩', 'หญ้าแห้ง':'🌾' };
+// Loot that turns into materials when picked up
+const MAT_ALIAS = {
+  'ไม้เนื้อแข็ง':['ไม้',2], 'เถาวัลย์':['เชือก',1], 'สาหร่ายผูกเชือก':['เชือก',1], 'ผ้าเก่า':['ผ้า',1],
+  'เศษเหล็ก':['โลหะเก่า',1], 'แร่เหล็ก':['โลหะเก่า',2], 'ดินเหนียว':['หิน',1],
+  'ดอกไม้ยา':['สมุนไพร',1], 'ดอกไม้ป่า':['สมุนไพร',1], 'ดอกไม้บาน':['สมุนไพร',1],
+};
+// Loot that turns into a more common item when picked up
+const ITEM_ALIAS = { 'น้ำใต้ดิน':'น้ำสะอาด', 'แผนที่โลก':'แผนที่ลึกลับ', 'วิทยุสื่อสาร':'ชิ้นส่วนวิทยุ' };
+// Materials every explore gives for sure, by location type
+const LOC_MATS = {
+  cave:['หิน','หิน','โลหะเก่า'], river:['หิน','เชือก','สมุนไพร'], hut:['ผ้า','ไม้','เชือก'], forest:['ไม้','ไม้','เชือก'],
+  cliff:['หิน','เชือก','หญ้าแห้ง'], swamp:['สมุนไพร','เชือก','หญ้าแห้ง'], meadow:['หญ้าแห้ง','สมุนไพร','ไม้'],
+  ruins:['โลหะเก่า','ผ้า','โลหะเก่า'], waterfall:['หิน','สมุนไพร','เชือก'], temple:['ผ้า','หิน','สมุนไพร'],
+  orchard:['ไม้','หญ้าแห้ง','ไม้'], graveyard:['โลหะเก่า','โลหะเก่า','ผ้า'],
+};
+// Valuables: end score, the treasure-hunter's goal, and the merchant can sell them for materials
+const VALUABLES = ['ทองคำแท่ง','พลอย','ฟอสซิล','มุกน้ำจืด','หินสวยงาม','ขนนกอินทรี','แร่หายาก','คัมภีร์ลับ','เครื่องราง'];
+// Break things down into materials at the workbench
+const SALVAGE = {
+  'ตะเกียงเก่า':{ 'โลหะเก่า':1 }, 'กระทะเก่า':{ 'โลหะเก่า':2 }, 'เต็นท์ทหาร':{ 'ผ้า':3, 'เชือก':1 }, 'กระสุนเก่า':{ 'โลหะเก่า':1 },
+  'แก้ว':{ 'หิน':1 }, 'แบตเตอรี่เสื่อม':{ 'โลหะเก่า':1 }, 'อาวุธโบราณ':{ 'โลหะเก่า':3 }, 'ชุดเกราะเก่า':{ 'โลหะเก่า':2, 'ผ้า':1 },
+  'ที่พักชั่วคราว':{ 'ผ้า':1, 'ไม้':1 }, 'ผลไม้มีพิษ':{ 'สมุนไพร':1 }, 'รังตั๊กแตน':{ 'หญ้าแห้ง':2 },
+};
+// Uses before a tool breaks
+const DURABILITY = { 'หอก':5, 'มีด':8, 'โล่ไม้':5, 'ธนู':6, 'ขวานเหล็ก':8, 'ไม้เท้าเดินป่า':6, 'เบ็ดตกปลา':5, 'คบเพลิง':2 };
+
+// cat: tool | med | rescue · tier 1 anywhere, 2 needs the workbench, 3 needs camp Lv.3
+// start: known from the beginning; the rest are discovered when the team first holds an ingredient
+// side: 'evil' recipes only show to the evil player
 const CRAFTS = [
-  { name:'หอก',      needs:['ไม้','หิน'],                 time:2, desc:'โจมตีสัตว์ HP-40' },
-  { name:'กับดักสัตว์', needs:['ไม้','เชือก'],            time:2, desc:'ดักสัตว์อัตโนมัติ' },
-  { name:'ที่พักชั่วคราว', needs:['ไม้','ผ้า'],            time:2, desc:'พักฟื้นพลังงาน+30' },
-  { name:'ยาสมุนไพร', needs:['สมุนไพร'],                  time:1, desc:'รักษาอาการป่วย' },
-  { name:'คบเพลิง',   needs:['ไม้'],                    time:1, desc:'ป้องกันสัตว์ตอนกลางคืน' },
-  { name:'เครื่องกลั่นน้ำ',needs:['หิน','ดินเหนียว'],      time:2, desc:'ผลิตน้ำสะอาดเมื่อสิ้นสุดวัน' },
-  { name:'ยาพิษ',     needs:['ผลไม้มีพิษ'],             time:1, desc:'ทาบนอาหารให้ผู้อื่น' },
-  { name:'เชือกยาว',  needs:['เถาวัลย์'],               time:1, desc:'ใช้ปีนหน้าผาปลอดภัย' },
-  { name:'กระเป๋าคาดเอว',needs:['ผ้า','เชือก'],           time:2, desc:'เพิ่มช่องเก็บของ +2 (Permanent)' },
-  // --- NEW ADVANCED CRAFTS ---
-  { name:'วิทยุกู้ภัย SOS', needs:['วิทยุสื่อสาร','ชิ้นส่วนวิทยุ','ชิ้นส่วนวิทยุ','แบตเตอรี่เสื่อม','โลหะเก่า'], time:5, desc:'เรียกกู้ภัยสำเร็จ 100% ในวันที่ 7' },
-  { name:'ชุดแผนที่นำทาง', needs:['แผนที่โลก','เข็มทิศทองคำ','แก้ว','แผนที่ลึกลับ'], time:4, desc:'เปิดแผนที่ถาวร + ไม่โดนกับดักพื้นที่' },
-  { name:'ธูปสมุนไพร',   needs:['มอสเรืองแสง','มอสเรืองแสง','หญ้าแห้ง','หญ้าแห้ง','คัมภีร์ลับ'], time:2, desc:'ฟื้นฟู Sanity ทุกคนเป็น 100%' },
-  { name:'หม้อไฟป่า',     needs:['กระทะเก่า','น้ำใต้ดิน','ไก่ป่า','กระต่าย','สมุนไพร'], time:3, desc:'ฟื้นฟู HP/Hunger/Thirst เต็มทั้งแคมป์' },
+  { name:'หอก',          icon:'🗡️', cat:'tool', tier:1, needs:['ไม้','หิน'], time:1, start:true, desc:'อาวุธ DMG 40 · ใช้ได้ 5 ครั้ง' },
+  { name:'มีด',          icon:'🔪', cat:'tool', tier:1, needs:['หิน','หิน'], time:1, desc:'อาวุธ DMG 20 · เปิดหีบ/ทางพิเศษ · ใช้ได้ 8 ครั้ง' },
+  { name:'โล่ไม้',        icon:'🛡️', cat:'tool', tier:1, needs:['ไม้','ไม้','เชือก'], time:1, desc:'ลดดาเมจที่ได้รับ 30% · ใช้ได้ 5 ครั้ง' },
+  { name:'คบเพลิง',       icon:'🔥', cat:'tool', tier:1, needs:['ไม้','หญ้าแห้ง'], time:0, start:true, desc:'สำรวจที่มืดปลอดภัยขึ้น · ส่งสัญญาณกู้ภัยวันที่ 7' },
+  { name:'เชือกยาว',      icon:'🪢', cat:'tool', tier:1, needs:['เชือก','เชือก'], time:0, desc:'ปีนผา/น้ำตกปลอดภัยขึ้น · เข้าพื้นที่พิเศษได้' },
+  { name:'ไม้เท้าเดินป่า', icon:'🦯', cat:'tool', tier:1, needs:['ไม้'], time:0, desc:'สำรวจเร็วขึ้น 1 ชม. · ใช้ได้ 6 ครั้ง' },
+  { name:'เบ็ดตกปลา',     icon:'🎣', cat:'tool', tier:1, needs:['ไม้','เชือก'], time:1, desc:'ปลดล็อกปุ่ม "ตกปลา" · ใช้ได้ 5 ครั้ง' },
+  { name:'กับดักสัตว์',    icon:'🪤', cat:'tool', tier:1, needs:['ไม้','เชือก'], time:1, desc:'วางรอบแคมป์ จับสัตว์ได้ตอนกลางคืน' },
+  { name:'กระเป๋าคาดเอว',  icon:'👝', cat:'tool', tier:1, needs:['ผ้า','ผ้า','เชือก'], time:1, desc:'ช่องกระเป๋า +2 ถาวร' },
+  { name:'ที่พักชั่วคราว',  icon:'⛺', cat:'tool', tier:1, needs:['ผ้า','ไม้'], time:1, desc:'พักนอกแคมป์ได้ พลังงาน +50 (ใช้ครั้งเดียว)' },
+  { name:'ธนู',          icon:'🏹', cat:'tool', tier:2, needs:['ไม้','ไม้','เชือก'], time:1, desc:'ยิงก่อน DMG 25 สัตว์สวนกลับไม่ได้ · ใช้ได้ 6 ครั้ง' },
+  { name:'ขวานเหล็ก',     icon:'🪓', cat:'tool', tier:2, needs:['โลหะเก่า','โลหะเก่า','ไม้'], time:2, desc:'DMG +12 · เก็บวัสดุได้ไม้เพิ่ม · ใช้ได้ 8 ครั้ง' },
+  { name:'ไฟฉาย',        icon:'🔦', cat:'tool', tier:2, needs:['ตะเกียงเก่า','แบตเตอรี่เสื่อม'], time:1, desc:'สำรวจถ้ำ/วัด/ซากอาคารปลอดภัย + ได้ของเพิ่ม (ไม่หมด)' },
+  { name:'เครื่องกลั่นน้ำ',  icon:'💧', cat:'tool', tier:2, needs:['หิน','หิน','ผ้า'], time:2, desc:'ได้น้ำสะอาด 1 ขวดทุกคืน' },
+  { name:'ผ้าพันแผล',     icon:'🩹', cat:'med',  tier:1, needs:['ผ้า'], time:0, start:true, desc:'รักษาบาดเจ็บ HP +15' },
+  { name:'ยาสมุนไพร',     icon:'💊', cat:'med',  tier:1, needs:['สมุนไพร','สมุนไพร'], time:1, start:true, desc:'หายป่วย/พิษ/บาดเจ็บ HP +25' },
+  { name:'ยาบำรุงกำลัง',   icon:'⚡', cat:'med',  tier:1, needs:['สมุนไพร','รวงผึ้ง'], time:0, desc:'กินแล้วพลังงาน +40 หิว +10' },
+  { name:'ธูปสมุนไพร',     icon:'🪔', cat:'med',  tier:2, needs:['สมุนไพร','สมุนไพร','หญ้าแห้ง'], time:1, desc:'จุดทันที: ทุกคนค่าสติ +40' },
+  { name:'หม้อไฟป่า',      icon:'🍲', cat:'med',  tier:3, needs:['กระทะเก่า','เนื้อสัตว์','สมุนไพร'], time:2, desc:'กินแล้วทุกคน HP/หิว/น้ำ เต็ม และหายป่วย' },
+  { name:'สัญญาณขอความช่วยเหลือ', icon:'🎆', cat:'rescue', tier:2, needs:['หญ้าแห้ง','หญ้าแห้ง','ผ้า','ไม้ขีดไฟ'], time:1, desc:'พลุสัญญาณ: โอกาสกู้ภัย +45% วันที่ 7' },
+  { name:'ชุดแผนที่นำทาง',  icon:'🗺️', cat:'rescue', tier:2, needs:['แผนที่ลึกลับ','ผ้า'], time:1, desc:'สำรวจเร็วขึ้น 3 ชม. + เห็นของทุกสถานที่' },
+  { name:'วิทยุกู้ภัย SOS', icon:'📻', cat:'rescue', tier:3, needs:['ชิ้นส่วนวิทยุ','แบตเตอรี่เสื่อม','โลหะเก่า','โลหะเก่า'], time:3, desc:'กู้ภัยสำเร็จ 100% ในวันที่ 7' },
+  { name:'ยาพิษ',        icon:'🧪', cat:'med',  tier:1, needs:['ผลไม้มีพิษ'], time:0, side:'evil', desc:'(ลับ) ผสมลงอาหารของคนอื่น' },
+  { name:'ยาพิษไร้กลิ่น',  icon:'🫙', cat:'med',  tier:1, needs:['ผลไม้มีพิษ','สมุนไพร'], time:1, side:'evil', desc:'(ลับ) วางยาตอนกลางคืนโดยแทบไม่ทิ้งเบาะแส' },
+  { name:'กับดักแคมป์',    icon:'🕸️', cat:'tool', tier:1, needs:['ไม้','เชือก'], time:1, side:'evil', desc:'(ลับ) ซ่อนในแคมป์ คนเฝ้ายามจะบาดเจ็บ' },
 ];
 
 const MAP_EVENT_LOCATIONS = [
@@ -226,7 +270,7 @@ if (socket) {
       
       switch(action) {
         case 'handleAction':
-          handleAction(args[0], args[1]);
+          handleAction(args[0], args[1], args[2]);
           break;
         case 'explore':
           exploreLocation(args[0], args[1]);
@@ -239,6 +283,12 @@ if (socket) {
           break;
         case 'craft':
           doCraft(args[0], args[1]);
+          break;
+        case 'salvage':
+          doSalvage(args[0], args[1]);
+          break;
+        case 'repair':
+          doRepair(args[0], args[1]);
           break;
         case 'pvp':
           selectPvpTarget(args[0], args[1], args[2]);
@@ -256,7 +306,7 @@ if (socket) {
           takeFromCamp(args[0], args[1]);
           break;
         case 'combatRound':
-          doCombatRound(args[0], args[1]);
+          doCombatRound(args[0]);
           break;
         case 'endPlayerTurn':
           endPlayerTurn(args[0]);
@@ -606,7 +656,7 @@ let G = {
 // ===================== SINGLE-PLAYER AUTOSAVE =====================
 // Bump SAVE_VERSION whenever the saved shape changes; older saves are then ignored.
 const SAVE_KEY = 'forest_survival_save';
-const SAVE_VERSION = 1;
+const SAVE_VERSION = 2;
 const SAVE_LOG_LIMIT = 150; // story-box messages kept in a save
 
 // phase 'turn': saved at the top of startTurn (before decay) → resume with startTurn(currentPlayer)
@@ -625,7 +675,8 @@ function saveGame(phase) {
         dayDone: G.dayDone, thiefUsed: G.thiefUsed, locations: G.locations,
         camp: G.camp, weather: G.weather, activeEvent: G.activeEvent,
         mapEvent: G.mapEvent, rescueData: G.rescueData,
-        usedEventIds: G.usedEventIds, activeTraps: G.activeTraps
+        usedEventIds: G.usedEventIds, activeTraps: G.activeTraps,
+        mats: G.mats, discovered: G.discovered, weatherQueue: G.weatherQueue, safeDay: G.safeDay
       },
       storyLog: msgs.slice(-SAVE_LOG_LIMIT).map(el => el.outerHTML).join(''),
       dailyEventHtml: document.getElementById('daily-event-box')?.innerHTML || ''
@@ -684,6 +735,7 @@ function continueSavedGame() {
       activeEvent: s.activeEvent || {}, mapEvent: s.mapEvent || null,
       rescueData: s.rescueData || { attempts: [], lastChance: 0, success: false },
       usedEventIds: s.usedEventIds || [], activeTraps: s.activeTraps || [],
+      mats: s.mats || null, discovered: s.discovered || null, weatherQueue: s.weatherQueue || [], safeDay: s.safeDay || 0,
       combatState: null, isLoading: false
     });
 
@@ -927,6 +979,9 @@ function initGameMultiplayer(roomData) {
     };
 
     G.rescueData = { attempts: [], lastChance: 0, success: false };
+    G.mats = null; G.discovered = null; G.weatherQueue = []; G.safeDay = 0;
+    ensureMats();
+    Object.assign(G.mats, STARTER_MATS); discoverRecipes(true);
 
     G.players = roomData.players.map((p, i) => {
       const jobDetails = JOBS.find(j => j.id === p.job.id) || p.job;
@@ -1002,6 +1057,9 @@ function initGame(playerName, playerJob) {
     };
 
     G.rescueData = { attempts: [], lastChance: 0, success: false };
+    G.mats = null; G.discovered = null; G.weatherQueue = []; G.safeDay = 0;
+    ensureMats();
+    Object.assign(G.mats, STARTER_MATS); discoverRecipes(true);
 
     G.players = PLAYER_NAMES.map((name, i) => {
       // Use playerName for the first player
@@ -1061,7 +1119,9 @@ function startDay() {
     G.players.forEach(p => p.skillUsed = false);
 
     // weather
-    G.weather = WEATHER_TYPES[Math.floor(Math.random()*WEATHER_TYPES.length)];
+    // The shaman's forecast queues upcoming weather; use it so the prediction comes true
+    G.weather = (Array.isArray(G.weatherQueue) && G.weatherQueue.length) ? G.weatherQueue.shift()
+      : WEATHER_TYPES[Math.floor(Math.random()*WEATHER_TYPES.length)];
     document.getElementById('weather-icon').textContent = G.weather.icon;
     document.getElementById('weather-text').textContent = G.weather.text;
 
@@ -1352,13 +1412,18 @@ function renderActions(pi) {
   const btns = [
     { label:'🌿 สำรวจสถานที่', cost:'ตามสถานที่', action:'explore' },
     { label:'😴 พักผ่อนที่แคมป์', cost:'4 ชม.', action:'rest' },
-    { label:'🍽️ กินอาหาร', cost:'1 ชม.', action:'eat' },
-    { label:'💊 รักษาตัวเอง', cost:'2 ชม.', action:'heal' },
+    { label:'🍽️ กิน / ดื่ม', cost:'1 ชม.', action:'eat' },
+    { label:'💊 รักษาตัวเอง', cost:'1 ชม.', action:'heal' },
     { label:`🎁 แบ่งของให้เพื่อน`, cost:'1 ชม.', action:'share' },
-    { label:'🔨 คราฟของใช้', cost:'ตามสูตร', action:'craft', badge: canCraftAny },
-    { label:`🗡️ ใช้สกิล: ${p.job.skDesc}`, cost:'2 ชม.', action:'skill', highlight:true },
-    { label:'🏕️ กลับแคมป์', cost:'2 ชม.', action:'camp' },
+    { label:'🔨 โต๊ะช่าง / คราฟ', cost:'ตามสูตร', action:'craft', badge: canCraftAny },
+    { label:`✨ ใช้สกิล: ${p.job.skDesc}${p.skillUsed ? ' (ใช้แล้ววันนี้)' : ''}`, cost:'2 ชม.', action:'skill', highlight:!p.skillUsed },
+    p.atCamp
+      ? { label:'⛏️ เก็บวัสดุรอบแคมป์', cost:'1 ชม.', action:'gather' }
+      : { label:'🏕️ กลับแคมป์', cost:'2 ชม.', action:'camp' },
   ];
+  if (p.inventory.includes('เบ็ดตกปลา')) {
+    btns.push({ label:`🎣 ตกปลา (${duraLeft(p, 'เบ็ดตกปลา')} ครั้ง)`, cost:'1 ชม.', action:'fish' });
+  }
 
   // Add PVP action only if player has attack skill (thief or soldier)
   const canAttackPvp = p.job.id === 'thief' || p.job.id === 'soldier';
@@ -1375,7 +1440,7 @@ function renderActions(pi) {
   }
   // แสดงปุ่มปรุงอาหารเมื่อมีกองไฟและมีวัตถุดิบ
   const hasFire = G.camp.structures.includes('campfire') || G.camp.structures.includes('stove');
-  const hasCookable = CAMP_RECIPES.some(r => p.inventory.includes(r.input));
+  const hasCookable = CAMP_RECIPES.some(r => itemPool(pi, true).includes(r.input));
   if (hasFire && hasCookable) {
     btns.push({ label:'🍳 ปรุงอาหารที่กองไฟแคมป์', cost:'1 ชม.', action:'cookcamp', highlight:true });
   }
@@ -1404,47 +1469,27 @@ function renderActions(pi) {
 
 function updateCraftBadge(pi) {
   const p = G.players[pi];
-  if (!p) return false;
-  
-  const canCraftAny = CRAFTS.some(c => {
-    const inv = [...p.inventory];
-    const needs = (p.job && p.job.id === 'engineer') ? c.needs.slice(0, c.needs.length-1) : c.needs;
-    const canCraft = needs.every(need => {
-      const idx = inv.indexOf(need);
-      if (idx > -1) {
-        inv.splice(idx, 1);
-        return true;
-      }
-      return false;
-    });
-    return canCraft && p.hoursLeft >= c.time;
-  });
-
-  // UI update: toggle badge visibility
-  const craftBtn = document.querySelector('.act-btn[onclick*="craft"]');
-  if (craftBtn) {
-    let badge = craftBtn.querySelector('.craft-badge');
-    if (canCraftAny) {
-      if (!badge) {
-        badge = document.createElement('div');
-        badge.className = 'craft-badge';
-        craftBtn.appendChild(badge);
-      }
-    } else {
-      if (badge) badge.remove();
-    }
-  }
-  return canCraftAny;
+  if (!p || !G.camp) return false;
+  ensureMats();
+  const canCraft = CRAFTS.some(c => (!c.side || p.side === c.side) && G.discovered.includes(c.name) &&
+    tierUnlocked(c.tier) && p.hoursLeft >= craftHours(pi, c.time) && haveAll(pi, c.needs));
+  const canBuild = p.atCamp && CAMP_STRUCTURES.some(s => !G.camp.structures.includes(s.id) && tierUnlocked(s.tier) &&
+    p.hoursLeft >= craftHours(pi, s.time) && (haveAll(pi, s.needs) || (s.alt && haveAll(pi, s.alt))));
+  return canCraft || canBuild;
 }
 
-function handleAction(pi, action) {
+// arg: extra choice for some actions (eat: which food)
+function handleAction(pi, action, arg) {
+  const p = G.players[pi];
+  // Choosing what to eat happens locally; the chosen food is then sent to the host
+  const pickFood = action === 'eat' && !arg && p && !p.isBot && window.SX;
   const uiActions = ['cookcamp', 'explore', 'share', 'craft', 'pvp'];
+  if (pickFood) { SX.openEatPicker(pi); return; }
   if (!uiActions.includes(action)) {
-    if (sendClientAction('handleAction', pi, action)) return;
+    if (sendClientAction('handleAction', pi, action, arg)) return;
   }
   if (G.isLoading) return;
 
-  const p = G.players[pi];
   
   // Set global loading state to prevent spam clicking
   G.isLoading = true;
@@ -1452,7 +1497,8 @@ function handleAction(pi, action) {
   
   if (action === 'cookcamp') {
     if (!p.atCamp) { addMsg('❌ ต้องกลับมาที่แคมป์ก่อนถึงจะปรุงอาหารได้', 'bubble-system'); G.isLoading = false; setButtons(false); return; }
-    openCampMenu(); G.isLoading = false; setButtons(false); return;
+    G.isLoading = false; setButtons(false);
+    if (window.SX) SX.openWorkbench(pi, 'med'); return;
   }
   if (action === 'explore') { showLocationPicker(pi); G.isLoading = false; setButtons(false); return; }
   if (action === 'share') { showShareOverlay(pi); G.isLoading = false; setButtons(false); return; }
@@ -1499,7 +1545,7 @@ function handleAction(pi, action) {
     return;
   }
   if (action === 'eat') {
-    const food = p.inventory.find(i => isFood(i) || i === 'อาหารอาบยาพิษ');
+    const food = (arg && p.inventory.includes(arg)) ? arg : p.inventory.find(i => isFood(i) || i === 'อาหารอาบยาพิษ');
     if (!food) { addMsg('❌ ไม่มีอาหารหรือน้ำ', 'bubble-system'); G.isLoading = false; setButtons(false); return; }
     hoursCost = 1;
     let toxic = food === 'ผลไม้มีพิษ' || food === 'น้ำเน่า' || food === 'เห็ด' || food === 'อาหารอาบยาพิษ';
@@ -1514,9 +1560,9 @@ function handleAction(pi, action) {
     
     // RAW FOOD POISONING CHECK (User's Synergy Grid)
     const rawItems = ['ไก่ป่า', 'กระต่าย', 'ค้างคาว', 'กบ', 'กุ้งฝอย', 'หอยเชลล์', 'ปูน้ำจืด', 'ไข่นก', 'ไข่จระเข้', 'แมลง', 'มอสเรืองแสง', 'เนื้อสัตว์', 'ปลา'];
-    if (rawItems.includes(food) && !isCook) {
+    if (rawItems.includes(food) && !isCook && Math.random() < RAW_SICK_CHANCE) {
       p.statuses = addStatus(p.statuses, 'sick');
-      addMsg(`🤢 ${p.name} กิน ${food} แบบดิบๆ! สารพิษและพยาธิในป่าทำให้ล้มป่วยทันที!`, 'bubble-event-bad');
+      addMsg(`🤢 ${p.name} กิน ${food} แบบดิบๆ! พยาธิในป่าทำให้ล้มป่วย`, 'bubble-event-bad');
     }
 
     let hungerGain = 0, thirstGain = 0, hpGain = 0, energyGain = 0;
@@ -1543,7 +1589,8 @@ function handleAction(pi, action) {
       case 'รวงผึ้ง': hungerGain = 20; energyGain = 20; extraEffect = ' (น้ำผึ้งหวานช่วยฟื้นพลังงาน)'; break;
       case 'กุ้งฝอย': case 'หอยเชลล์': case 'ปูน้ำจืด': hungerGain = 15; thirstGain = 10; break;
       case 'กุ้งมังกรป่า': hungerGain = 50; hpGain = 15; break;
-      case 'มุกน้ำจืด': hpGain = 20; energyGain = 15; extraEffect = ' (มุกบดช่วยบำรุงกาย)'; break;
+      case 'ยาบำรุงกำลัง': hungerGain = 10; energyGain = 40; extraEffect = ' (พลังงาน +40)'; break;
+      case 'รังตั๊กแตน': hungerGain = 15; energyGain = 5; break;
       case 'ไข่จระเข้': hungerGain = 45; hpGain = 20; break;
       case 'หม้อไฟป่า': {
         G.players.forEach(p2 => {
@@ -1590,15 +1637,50 @@ function handleAction(pi, action) {
     return;
   }
   if (action === 'heal') {
-    hoursCost = 2;
+    hoursCost = 1;
     const isDoc = p.job.id === 'doctor';
-    const herb = p.inventory.find(i => i === 'สมุนไพร' || i === 'สมุนไพรหายาก' || i === 'ยาสมุนไพร');
-    if (!herb && !isDoc) { addMsg('❌ ไม่มีสมุนไพรหรือยา', 'bubble-system'); G.isLoading = false; setButtons(false); return; }
-    if (!isDoc && herb) p.inventory.splice(p.inventory.indexOf(herb),1);
-    p.hp = clamp(p.hp + 20, 0, 100);
-    p.statuses = p.statuses.filter(s => s !== 'sick' && s !== 'poison' && s !== 'injured');
-    addMsg(`${p.name} รักษาตัวเอง — HP +20, อาการป่วยหาย${isDoc?' (สกิลหมอ)':''}`, 'bubble-event-good');
+    const med = pickHealItem(p);
+    if (!med && !isDoc) {
+      addMsg('❌ ไม่มียา — คราฟ 🩹 ผ้าพันแผล (ผ้า) หรือ 💊 ยาสมุนไพร (สมุนไพร ×2) ได้ที่โต๊ะช่าง', 'bubble-system');
+      G.isLoading = false; setButtons(false); return;
+    }
+    const all = ['sick', 'poison', 'injured'];
+    const fx = isDoc && !med ? { hp:25, cures:all, label:'สกิลหมอ' } : HEAL_ITEMS[med];
+    if (med === 'สมุนไพร') G.mats['สมุนไพร']--;
+    else if (med) p.inventory.splice(p.inventory.indexOf(med), 1);
+    p.hp = clamp(p.hp + fx.hp, 0, 100);
+    p.statuses = p.statuses.filter(s => !fx.cures.includes(s));
+    addMsg(`💊 ${p.name} รักษาตัวด้วย${fx.label || med} — HP +${fx.hp}${fx.cures.length ? `, หาย${fx.cures.map(statusLabel).join(' ')}` : ''}`, 'bubble-event-good');
+    renderAllPanels();
     spendTime(pi, hoursCost);
+    return;
+  }
+  if (action === 'gather') {
+    if (!p.atCamp) { addMsg('❌ เก็บวัสดุรอบแคมป์ได้เฉพาะตอนอยู่ที่แคมป์', 'bubble-system'); G.isLoading = false; setButtons(false); return; }
+    const pool = ['ไม้', 'ไม้', 'หิน', 'หญ้าแห้ง', 'เชือก'];
+    const got = [pick(pool), pick(pool)];
+    if (p.inventory.includes('ขวานเหล็ก')) { got.push('ไม้', 'ไม้'); useTool(pi, 'ขวานเหล็ก'); }
+    got.forEach(m => addMats(m, 1, true));
+    discoverRecipes();
+    p.energy = clamp(p.energy - 5, 0, 100);
+    const counts = countNeeds(got);
+    addMsg(`⛏️ ${p.name} เก็บวัสดุรอบแคมป์: ${Object.entries(counts).map(([m, k]) => `${MAT_ICON[m]}${m} ×${k}`).join(' · ')}`, 'bubble-event-good');
+    renderAllPanels();
+    spendTime(pi, 1);
+    return;
+  }
+  if (action === 'fish') {
+    if (!p.inventory.includes('เบ็ดตกปลา')) { addMsg('❌ ต้องมีเบ็ดตกปลา', 'bubble-system'); G.isLoading = false; setButtons(false); return; }
+    useTool(pi, 'เบ็ดตกปลา');
+    const nearWater = !p.atCamp && G.locations.some(l => l.explored.includes(pi) && ['river', 'waterfall', 'swamp'].includes(l.id));
+    if (Math.random() < (nearWater ? 0.9 : 0.65)) {
+      const catchItem = Math.random() < 0.12 ? 'กุ้งมังกรป่า' : 'ปลา';
+      addToInventory(pi, catchItem);
+      addMsg(`🎣 ${p.name} ตกได้ ${catchItem}!${nearWater ? ' (ริมน้ำปลาชุม)' : ''}`, 'bubble-event-good');
+    } else {
+      addMsg(`🎣 ${p.name} นั่งรอนานแต่ปลาไม่กินเบ็ด`, 'bubble-system');
+    }
+    spendTime(pi, 1);
     return;
   }
   if (action === 'camp') {
@@ -1609,7 +1691,7 @@ function handleAction(pi, action) {
     return;
   }
   if (action === 'skill') {
-    doSkillAction(pi);
+    doSkillAction(pi, arg);
     return;
   }
   if (action === 'poison') {
@@ -1694,10 +1776,10 @@ function doPoisonFood(pi, foodName) {
 }
 
 // ===================== BOT AI =====================
-const BOT_HERBS = ['สมุนไพร','สมุนไพรหายาก','ยาสมุนไพร'];
+const BOT_HERBS = ['สมุนไพรหายาก','ยาสมุนไพร','ผ้าพันแผล','ชุดปฐมพยาบาล'];
 const BOT_RAW_FOODS = ['ไก่ป่า','กระต่าย','ค้างคาว','กบ','กุ้งฝอย','หอยเชลล์','ปูน้ำจืด','ไข่นก','ไข่จระเข้','แมลง','มอสเรืองแสง','เนื้อสัตว์','ปลา'];
 const BOT_TOXIC_FOODS = ['ผลไม้มีพิษ','น้ำเน่า','เห็ด','อาหารอาบยาพิษ'];
-const BOT_WEAPONS = ['หอก','มีด'];
+const BOT_WEAPONS = ['หอก','มีด','ธนู'];
 const BOT_WATER_LOCS = ['river','waterfall','swamp'];
 // [hunger, thirst] gained when eaten — mirrors handleAction('eat'); unknown foods give hunger 20
 const BOT_FOOD_VALUE = {
@@ -1720,7 +1802,7 @@ function hasMaterials(inv, needs) {
 }
 
 function botCraftNeeds(p, needs) {
-  return (p.job && p.job.id === 'engineer') ? needs.slice(0, needs.length - 1) : needs;
+  return needs;
 }
 
 function botHasWeapon(p) {
@@ -1757,12 +1839,9 @@ function botPickFood(p, needHunger, needThirst) {
 // Eat a specific item through the normal eat action (it eats the first food in the bag)
 function botEat(pi, food) {
   const p = G.players[pi];
-  const idx = p.inventory.indexOf(food);
   // the eat action only consumes isFood() items; anything else would stall the bot's turn
-  if (idx === -1 || !isFood(food)) return false;
-  p.inventory.splice(idx, 1);
-  p.inventory.unshift(food);
-  handleAction(pi, 'eat');
+  if (!p.inventory.includes(food) || !isFood(food)) return false;
+  handleAction(pi, 'eat', food);
   return true;
 }
 
@@ -1780,23 +1859,14 @@ function botTakeFromCamp(pi) {
   const hasWater = safeFoods.some(f => (BOT_FOOD_VALUE[f] || [0, 0])[1] >= 50);
   const wantWater = roomForFood && p.thirst < 70 && !hasWater;
   const wantFood = roomForFood && p.hunger < 65 && safeFoods.filter(f => (BOT_FOOD_VALUE[f] || [20, 0])[0] > 0).length < 1;
-  const wantHerb = (p.hp < 75 || p.statuses.some(s => ['sick','poison','injured'].includes(s))) && p.job.id !== 'doctor' && !p.inventory.some(i => BOT_HERBS.includes(i));
+  const wantHerb = (p.hp < 75 || p.statuses.some(s => ['sick','poison','injured'].includes(s))) && p.job.id !== 'doctor' && !pickHealItem(p);
   const wantWeaponMats = !botHasWeapon(p);
 
   let idx = -1;
   if (wantWater) idx = shared.findIndex(i => i === 'น้ำสะอาด' && botIsSafeFood(p, i));
   if (idx === -1 && wantHerb) idx = shared.findIndex(i => BOT_HERBS.includes(i));
   if (idx === -1 && wantFood) idx = shared.findIndex(i => botIsSafeFood(p, i) && (BOT_FOOD_VALUE[i] || [20, 0])[0] > 0);
-  if (idx === -1 && wantWeaponMats) {
-    idx = shared.findIndex(i => BOT_WEAPONS.includes(i));
-    if (idx === -1) {
-      const needs = botCraftNeeds(p, CRAFTS.find(c => c.name === 'หอก').needs);
-      const missing = needs.filter(m => !p.inventory.includes(m));
-      if (missing.length && hasMaterials(shared, missing) && p.inventory.length + missing.length <= getInventoryLimit(p)) {
-        idx = shared.indexOf(missing[0]);
-      }
-    }
-  }
+  if (idx === -1 && wantWeaponMats) idx = shared.findIndex(i => BOT_WEAPONS.includes(i));
   if (idx === -1) return false;
 
   const item = shared[idx];
@@ -1820,7 +1890,7 @@ function botChooseAction(pi) {
 
   const caution = getDifficulty().botCaution;
   const isDoc = p.job.id === 'doctor';
-  const hasHerb = p.inventory.some(i => BOT_HERBS.includes(i));
+  const hasHerb = !!pickHealItem(p);
   const ailing = p.statuses.some(s => s === 'sick' || s === 'poison');
   const retreatHp = Math.round(45 * caution);
   if (p.botDay !== G.day) { p.botDay = G.day; p.botExplores = 0; p.botFreeActions = 0; p.botRescueTried = false; }
@@ -1868,10 +1938,16 @@ function botChooseAction(pi) {
   // 6. Craft a weapon before walking into the wild
   if (!botHasWeapon(p) && p.hoursLeft >= 2) {
     const spear = CRAFTS.find(c => c.name === 'หอก');
-    if (hasMaterials(p.inventory, botCraftNeeds(p, spear.needs))) {
+    if (haveAll(pi, spear.needs) && p.hoursLeft >= craftHours(pi, spear.time)) {
       doCraft(pi, spear.name);
       return;
     }
+  }
+
+  // 6b. Fish for food when hungry and out of safe food
+  if (p.inventory.includes('เบ็ดตกปลา') && p.hunger < 60 && !botSafeFoods(p).length && p.hoursLeft >= 1) {
+    handleAction(pi, 'fish');
+    return;
   }
 
   // 7. Badly hurt: go home and recover
@@ -1939,6 +2015,13 @@ function botChooseAction(pi) {
     if (botCampAction(pi)) return;
   }
 
+  // 13b. Gather materials around camp when the team pouch is low
+  const pouch = BASIC_MATS.reduce((a, m) => a + matCount(m), 0);
+  if (p.atCamp && p.hoursLeft >= 1 && pouch < 8 && p.energy >= 30) {
+    handleAction(pi, 'gather');
+    return;
+  }
+
   // 14. Spare time: recover at camp
   if (p.atCamp && p.hoursLeft >= 4 && (p.energy < 85 || p.hp < 90)) {
     handleAction(pi, 'rest');
@@ -1979,6 +2062,15 @@ function getInventoryLimit(p) {
 
 function addToInventory(pi, item) {
   const p = G.players[pi];
+  if (ITEM_ALIAS[item]) item = ITEM_ALIAS[item];
+  // Basic materials go to the team's material pouch, not the 5-slot bag
+  if (MAT_ALIAS[item] || isBasicMat(item)) {
+    const [mat, n] = MAT_ALIAS[item] || [item, 1];
+    addMats(mat, n);
+    discoverRecipes();
+    renderAllPanels();
+    return true;
+  }
   const limit = getInventoryLimit(p);
   if (p.inventory.length >= limit) {
     addMsg(`🎒 กระเป๋าของ ${p.name} เต็มแล้ว! (ลิมิต ${limit} ชิ้น) — ${item} ถูกทิ้งลงพื้น`, 'bubble-event-bad');
@@ -1991,14 +2083,16 @@ function addToInventory(pi, item) {
     return false;
   }
   p.inventory.push(item);
+  if (DURABILITY[item] && p.dura && p.inventory.filter(i => i === item).length === 1) delete p.dura[item];
+  discoverRecipes();
   renderAllPanels();
   return true;
 }
 
 // Camp structures in the order bots try to build them
-const BOT_BUILD_ORDER = ['campfire','hut','watertank','clinic','stove','fence','tower','purifier','fortified'];
+const BOT_BUILD_ORDER = ['campfire','workbench','hut','watertank','fence','clinic','smoker','tower','stove','garden','lock','bell','trapfence','purifier','fortified'];
 // Items a bot keeps in its bag instead of depositing
-const BOT_KEEP_ITEMS = ['หอก','มีด','ยาพิษ','กับดักสัตว์','คบเพลิง','เครื่องกลั่นน้ำ','เชือกยาว','ชุดปฐมพยาบาล','ขวานเหล็ก',
+const BOT_KEEP_ITEMS = ['หอก','มีด','ธนู','โล่ไม้','เบ็ดตกปลา','ไม้เท้าเดินป่า','ไฟฉาย','ผ้าพันแผล','ยาพิษ','กับดักสัตว์','คบเพลิง','เครื่องกลั่นน้ำ','เชือกยาว','ชุดปฐมพยาบาล','ขวานเหล็ก',
   'กระเป๋าคาดเอว','สัญญาณขอความช่วยเหลือ','วิทยุกู้ภัย SOS','ชุดแผนที่นำทาง','เข็มทิศทองคำ','สมุดบันทึกนักสำรวจ',
   'อาวุธโบราณ','ชุดเกราะเก่า','เครื่องรางศักดิ์สิทธิ์','ที่พักชั่วคราว','แผนที่ลึกลับ', ...BOT_HERBS];
 
@@ -2008,9 +2102,9 @@ function botCampAction(pi) {
   const limit = getInventoryLimit(p);
 
   // A. Build structure if materials exist (bag + camp store)
-  const pool = [...p.inventory, ...G.camp.sharedItems];
   const buildable = BOT_BUILD_ORDER.map(id => CAMP_STRUCTURES.find(s => s.id === id)).find(s =>
-    s && !G.camp.structures.includes(s.id) && p.hoursLeft >= s.time && hasMaterials(pool, botCraftNeeds(p, s.needs)));
+    s && !G.camp.structures.includes(s.id) && tierUnlocked(s.tier) && p.hoursLeft >= craftHours(pi, s.time) &&
+    (haveAll(pi, s.needs) || (s.alt && haveAll(pi, s.alt))));
   if (buildable) {
     doBuildCampStructure(pi, buildable.id, buildable.name);
     return true;
@@ -2019,17 +2113,23 @@ function botCampAction(pi) {
   // B. Craft useful items if materials exist
   const sanityLow = G.players.some(o => o.alive && o.sanity < 40);
   const wanted = [
+    !p.inventory.includes('เบ็ดตกปลา') && 'เบ็ดตกปลา',
+    !p.inventory.includes('โล่ไม้') && 'โล่ไม้',
+    !pickHealItem(p) && 'ยาสมุนไพร',
+    !p.inventory.includes('ผ้าพันแผล') && 'ผ้าพันแผล',
     !p.inventory.includes('เครื่องกลั่นน้ำ') && 'เครื่องกลั่นน้ำ',
     !p.inventory.includes('กระเป๋าคาดเอว') && 'กระเป๋าคาดเอว',
     !G.camp.structures.includes('hut') && !p.inventory.includes('ที่พักชั่วคราว') && 'ที่พักชั่วคราว',
     G.day >= 5 && !p.inventory.includes('คบเพลิง') && 'คบเพลิง',
+    G.day >= 5 && 'สัญญาณขอความช่วยเหลือ',
     'วิทยุกู้ภัย SOS',
     'หม้อไฟป่า',
     sanityLow && 'ธูปสมุนไพร',
     'กับดักสัตว์',
   ].filter(Boolean);
   const craftable = wanted.map(name => CRAFTS.find(c => c.name === name)).find(c =>
-    c && p.hoursLeft >= c.time && hasMaterials(p.inventory, botCraftNeeds(p, c.needs)));
+    c && !c.side && tierUnlocked(c.tier) && p.hoursLeft >= craftHours(pi, c.time) && haveAll(pi, c.needs) &&
+    (p.inventory.length < getInventoryLimit(p) || c.name === 'ธูปสมุนไพร'));
   if (craftable) {
     doCraft(pi, craftable.name);
     return true;
@@ -2057,7 +2157,7 @@ function botCampAction(pi) {
   let surplus = null;
   if (p.botFreeActions >= BOT_MAX_FREE_ACTIONS) return false;
   if (p.inventory.length >= limit - 1) {
-    const spearNeeds = botHasWeapon(p) ? [] : botCraftNeeds(p, CRAFTS.find(c => c.name === 'หอก').needs);
+    const spearNeeds = [];
     surplus = p.inventory.find(item => !isFood(item) && !BOT_KEEP_ITEMS.includes(item) && !spearNeeds.includes(item))
       || p.inventory.find(item => BOT_TOXIC_FOODS.includes(item) && item !== 'อาหารอาบยาพิษ' && p.job.id !== 'chef');
   }
@@ -2096,159 +2196,148 @@ function endPlayerTurn(pi) {
   nextTurn();
 }
 
-function doSkillAction(pi) {
+// choice: what the player picked in the skill picker (engineer: structure id,
+// merchant: { sell, mat } or { swap:[bagItem, campIdx] }, spy: target index)
+function doSkillAction(pi, choice) {
   const p = G.players[pi];
-  if (p.skillUsed) { 
-    addMsg(`❌ ${p.name} ได้ใช้สกิลของอาชีพนี้ไปแล้ว (ใช้ได้ 1 ครั้ง/เกม)`, 'bubble-system'); 
+  if (p.skillUsed) {
+    addMsg(`❌ ${p.name} ใช้สกิลไปแล้ววันนี้ (วันละ 1 ครั้ง)`, 'bubble-system');
     spendTime(pi, 0);
-    return; 
+    return;
   }
-  
-  let hoursCost = 2;
+  const needsChoice = ['engineer', 'merchant', 'spy'].includes(p.job.id);
+  if (needsChoice && choice === undefined && !p.isBot && window.SX && pi === getMyPlayerIndex()) {
+    G.isLoading = false; setButtons(false);
+    SX.openSkillPicker(pi);
+    return;
+  }
+  const done = (hours = 2) => { p.skillUsed = true; renderAllPanels(); updateCampUI(); spendTime(pi, hours); };
+  const fail = msg => { addMsg(msg, 'bubble-system'); spendTime(pi, 0); };
+
   switch (p.job.id) {
     case 'hunter': {
-      const animals = ['กวาง', 'หมูป่า', 'ไก่ป่า'];
-      const animal = animals[Math.floor(Math.random() * animals.length)];
+      const animal = pick(['กวาง', 'หมูป่า', 'ไก่ป่า']);
       addToInventory(pi, 'เนื้อสัตว์');
       addToInventory(pi, 'เนื้อสัตว์');
-      addMsg(`🏹 ${p.name} ใช้สกิลนักล่า — ล่า${animal}ได้สำเร็จทันที! ได้รับเนื้อสัตว์ 2 ชิ้น 🥩🥩`, 'bubble-event-good');
-      p.skillUsed = true;
-      spendTime(pi, hoursCost);
+      addMsg(`🏹 ${p.name} ใช้สกิลนักล่า — ล่า${animal}ได้สำเร็จ! ได้เนื้อสัตว์ 2 ชิ้น 🥩🥩`, 'bubble-event-good');
+      done();
       break;
     }
     case 'doctor': {
       G.players.forEach((p2, idx) => {
-        if (p2.alive) {
-          p2.hp = clamp(p2.hp + 50, 0, 100);
-          p2.statuses = p2.statuses.filter(s => s !== 'sick' && s !== 'poison' && s !== 'injured');
-          if (idx !== pi) {
-            adjustTrust(idx, 4, 'การรักษาโดยหมอ');
-          }
-        }
+        if (!p2.alive) return;
+        p2.hp = clamp(p2.hp + 50, 0, 100);
+        p2.statuses = p2.statuses.filter(s => s !== 'sick' && s !== 'poison' && s !== 'injured');
+        if (idx !== pi) adjustTrust(idx, 4, 'การรักษาโดยหมอ');
       });
-      addMsg(`🩺 ${p.name} ใช้สกิลหมอ — รักษาทุกคนในกลุ่มอย่างเต็มที่! HP +50 และล้างสถานะผิดปกติ`, 'bubble-event-good');
-      p.skillUsed = true;
-      spendTime(pi, hoursCost);
+      addMsg(`🩺 ${p.name} ใช้สกิลหมอ — รักษาทุกคน HP +50 และล้างสถานะผิดปกติ`, 'bubble-event-good');
+      done();
       break;
     }
     case 'thief': {
-      if (p.skillUsed) { 
-        addMsg(`❌ ${p.name} ได้ใช้สกิลโจรไปแล้ว`, 'bubble-system'); 
-        spendTime(pi, 0); 
-        break; 
+      const victims = G.players.filter((p2, i) => i !== pi && p2.alive && p2.inventory.length);
+      if (!victims.length) { p.skillUsed = true; fail('ไม่มีใครให้ขโมย'); break; }
+      let stolen = 0;
+      for (let i = 0; i < 2; i++) {
+        const v = pick(victims);
+        if (!v.inventory.length) continue;
+        const item = v.inventory.splice(Math.floor(Math.random() * v.inventory.length), 1)[0];
+        addToInventory(pi, item);
+        stolen++;
       }
-      const victims = G.players.filter((p2,i)=>i!==pi && p2.alive && p2.inventory.length);
-      if (victims.length) {
-        let stolenCount = 0;
-        for (let i=0; i<2; i++) {
-          const v = victims[Math.floor(Math.random() * victims.length)];
-          if (v.inventory.length) {
-            const item = v.inventory.splice(Math.floor(Math.random() * v.inventory.length), 1)[0];
-            addToInventory(pi, item);
-            stolenCount++;
-          }
-        }
-        addMsg(`🗡️ ${p.name} ใช้สกิลโจร — ขโมยไอเทมมาได้ ${stolenCount} ชิ้น!`, 'bubble-event-bad');
-        p.skillUsed = true;
-        G.thiefUsed[pi] = true;
-        renderAllPanels();
-        spendTime(pi, hoursCost);
-      } else {
-        addMsg('ไม่มีใครให้ขโมย', 'bubble-system');
-        p.skillUsed = true;
-        G.thiefUsed[pi] = true;
-        spendTime(pi, 0);
-      }
+      addMsg(`🗡️ ${p.name} ใช้สกิลโจร — ขโมยไอเทมมาได้ ${stolen} ชิ้น!`, 'bubble-event-bad');
+      G.thiefUsed[pi] = true;
+      done();
       break;
     }
     case 'chef': {
-      for(let i=0; i<3; i++) addToInventory(pi, 'อาหารอุ่น');
-      addMsg(`🍳 ${p.name} ใช้สกิลพ่อครัว — เสกอาหารอุ่น 3 กล่องให้ทีม!`, 'bubble-event-good');
-      p.skillUsed = true;
-      spendTime(pi, hoursCost);
+      for (let i = 0; i < 3; i++) addToInventory(pi, 'อาหารอุ่น');
+      addMsg(`🍳 ${p.name} ใช้สกิลพ่อครัว — ทำอาหารอุ่น 3 กล่องให้ทีม!`, 'bubble-event-good');
+      done();
       break;
     }
     case 'scout': {
-      let scoutText = `🧭 ${p.name} สแกนพื้นที่ในวันนี้:\n`;
+      p.scoutDay = G.day;
+      let txt = `🧭 ${p.name} สแกนพื้นที่ — วันนี้สำรวจได้ผลดีเสมอและไม่เจอสัตว์ป่า:\n`;
       G.locations.forEach(loc => {
-        scoutText += `• ${loc.name}: มี ${loc.loot.slice(0,3).join(', ')}...\n`;
+        const lvl = loc.danger >= 0.45 ? '🔴 อันตราย' : loc.danger >= 0.3 ? '🟡 ปานกลาง' : '🟢 ปลอดภัย';
+        txt += `• ${loc.emoji} ${loc.name}: ${lvl} · สัตว์: ${loc.wild.join(', ')} · วัสดุ: ${[...new Set(LOC_MATS[loc.id] || [])].join(' ')}\n`;
       });
-      addMsg(scoutText, 'bubble-player');
-      p.skillUsed = true;
-      spendTime(pi, hoursCost);
+      addMsg(txt, 'bubble-event-good');
+      done();
       break;
     }
     case 'soldier': {
-      if (p.atCamp) { 
-        addMsg('❌ ต้องอยู่ในพื้นที่ป่าเพื่อใช้สกิลนี้', 'bubble-system'); 
-        spendTime(pi, 0); // Always call spendTime to avoid freeze
-        return; 
-      }
-      addMsg(`⚔️ ${p.name} ใช้สกิลทหาร — เคลียร์พื้นที่ปัจจุบันให้ปลอดภัย! สัตว์ป่าจะถูกกำจัด`, 'bubble-event-good');
+      G.safeDay = G.day;
       addToInventory(pi, 'เนื้อสัตว์');
-      p.skillUsed = true;
-      spendTime(pi, hoursCost);
+      addMsg(`⚔️ ${p.name} ออกลาดตระเวนเคลียร์เส้นทาง — วันนี้ทั้งทีมจะไม่เจอสัตว์ป่า! ได้เนื้อสัตว์ 1 ชิ้น`, 'bubble-event-good');
+      done();
       break;
     }
     case 'shaman': {
-      const futureWeather = Array.from({length:3}, () => WEATHER_TYPES[Math.floor(Math.random()*WEATHER_TYPES.length)]);
-      let msg = `🪄 ${p.name} หยั่งรู้สภาพอากาศ 3 วันข้างหน้า:\n`;
-      futureWeather.forEach((w, i) => msg += `• วันที่ ${G.day+i+1}: ${w.icon} ${w.text}\n`);
-      addMsg(msg, 'bubble-player');
-      p.skillUsed = true;
-      spendTime(pi, hoursCost);
+      if (!Array.isArray(G.weatherQueue)) G.weatherQueue = [];
+      while (G.weatherQueue.length < 3) G.weatherQueue.push(pick(WEATHER_TYPES));
+      let msg = `🪄 ${p.name} หยั่งรู้อนาคต — ทุกคนค่าสติ +15\n`;
+      G.weatherQueue.forEach((w, i) => { if (G.day + i + 1 <= 7) msg += `• วันที่ ${G.day + i + 1}: ${w.icon} ${w.text}\n`; });
+      G.players.forEach(p2 => { if (p2.alive) p2.sanity = clamp(p2.sanity + 15, 0, 100); });
+      addMsg(msg, 'bubble-event-good');
+      done();
       break;
     }
     case 'engineer': {
-      const buildable = CAMP_STRUCTURES.find(s => !G.camp.structures.includes(s.id));
-      if (buildable && p.atCamp) {
-        G.camp.structures.push(buildable.id);
-        addMsg(`🔨 วิศวกรสร้าง ${buildable.name} สำเร็จทันที!`, 'bubble-event-good');
-        p.skillUsed = true;
-        updateCampUI();
-        spendTime(pi, hoursCost);
-      } else {
-        addMsg('❌ ต้องอยู่ที่แคมป์เพื่อสร้าง', 'bubble-system');
-        spendTime(pi, 0);
-      }
+      if (!p.atCamp) { fail('❌ ต้องอยู่ที่แคมป์เพื่อสร้าง'); break; }
+      const options = CAMP_STRUCTURES.filter(s => !G.camp.structures.includes(s.id) && tierUnlocked(s.tier));
+      const s = options.find(o => o.id === choice) || (p.isBot ? options.find(o => BOT_BUILD_ORDER.includes(o.id)) || options[0] : null);
+      if (!s) { fail('❌ ไม่มีสิ่งปลูกสร้างที่สร้างได้'); break; }
+      G.camp.structures.push(s.id);
+      updateCampLevel();
+      addMsg(`🔧 ${p.name} ใช้สกิลวิศวกร — สร้าง ${s.emoji} ${s.name} ฟรีทันที! (${s.desc})`, 'bubble-event-good');
+      if (window.SX) SX.celebrate(s.emoji, s.name);
+      done();
       break;
     }
     case 'merchant': {
-      // Merchant can trade up to 3 items from inventory with camp storage instantly
-      if (p.atCamp && G.camp.sharedItems.length > 0 && p.inventory.length > 0) {
-        let tradeCount = 0;
-        for (let i=0; i<3; i++) {
-          if (p.inventory.length > 0 && G.camp.sharedItems.length > 0) {
-            const myItem = p.inventory.splice(0,1)[0];
-            const campItem = G.camp.sharedItems.splice(Math.floor(Math.random()*G.camp.sharedItems.length), 1)[0];
-            G.camp.sharedItems.push(myItem);
-            addToInventory(pi, campItem);
-            tradeCount++;
-          }
-        }
-        addMsg(`💰 ${p.name} ใช้สกิลพ่อค้า — แลกเปลี่ยนไอเทมฉุกเฉินกับคลังแคมป์ ${tradeCount} ชิ้น!`, 'bubble-event-good');
-        p.skillUsed = true;
-        updateCampUI();
-        spendTime(pi, hoursCost);
-      } else {
-        addMsg('❌ ต้องอยู่ที่แคมป์และมีของในคลังแคมป์เพื่อแลกเปลี่ยน', 'bubble-system');
-        spendTime(pi, 0);
+      if (!p.atCamp) { fail('❌ ต้องอยู่ที่แคมป์เพื่อค้าขาย'); break; }
+      // Sell a valuable for 4 materials of one kind
+      const sellItem = choice && choice.sell ? choice.sell : (p.isBot ? p.inventory.find(isValuable) : null);
+      if (sellItem && p.inventory.includes(sellItem)) {
+        const mat = (choice && BASIC_MATS.includes(choice.mat)) ? choice.mat : 'ไม้';
+        p.inventory.splice(p.inventory.indexOf(sellItem), 1);
+        addMats(mat, 4);
+        addMsg(`💰 ${p.name} ขาย ${sellItem} ได้ ${MAT_ICON[mat]}${mat} ×4`, 'bubble-event-good');
+        done(1);
+        break;
       }
+      // Swap up to 3 picked bag items for picked camp items
+      const swaps = (choice && Array.isArray(choice.swap)) ? choice.swap : [];
+      let traded = 0;
+      swaps.slice(0, 3).forEach(([bagItem, campItem]) => {
+        const bi = p.inventory.indexOf(bagItem), ci = G.camp.sharedItems.indexOf(campItem);
+        if (bi === -1 || ci === -1) return;
+        p.inventory[bi] = campItem;
+        G.camp.sharedItems[ci] = bagItem;
+        traded++;
+      });
+      if (!traded) { fail('❌ ไม่ได้เลือกของที่จะแลก'); break; }
+      addMsg(`💰 ${p.name} ใช้สกิลพ่อค้า — แลกของกับคลังแคมป์ ${traded} ชิ้น`, 'bubble-event-good');
+      done(1);
       break;
     }
     case 'spy': {
-      G.players.forEach(p2 => {
-        addMsg(`🕵️ [สายลับ] ${p2.name} คือ ${p2.job.name} — ของ: ${p2.inventory.join(',')||'ไม่มี'}`, 'bubble-player');
-      });
-      p.skillUsed = true;
-      spendTime(pi, hoursCost);
+      const target = G.players[choice] || (p.isBot ? pick(G.players.filter((p2, i) => i !== pi && p2.alive)) : null);
+      if (!target || target === p) { fail('❌ เลือกคนที่จะส่อง'); break; }
+      const side = typeof sideLabel === 'function' ? sideLabel(target.side) : 'ไม่ทราบ';
+      const secret = `🕵️ [สายลับ] ${target.name} คือ ${target.job.emoji} ${target.job.name} · ฝ่าย: ${side} · ของ: ${target.inventory.join(', ') || 'ไม่มี'}`;
+      // only the spy sees the result
+      if (!p.isBot && pi === getMyPlayerIndex()) addMsg(secret, 'bubble-player');
+      else addMsg(`🕵️ ${p.name} แอบสังเกตใครบางคนอย่างเงียบๆ...`, 'bubble-system');
+      if (p.isBot) { p.spyNotes = p.spyNotes || {}; p.spyNotes[G.players.indexOf(target)] = target.side; }
+      done();
       break;
     }
     default: {
       addMsg(`${p.name} ใช้สกิล ${p.job.name}`, 'bubble-player');
-      p.skillUsed = true;
-      spendTime(pi, hoursCost);
-      break;
+      done();
     }
   }
 }
@@ -2295,7 +2384,11 @@ function exploreLocation(pi, li) {
     addMsg(`📒 สมุดบันทึกมีแผนที่คร่าวๆ ช่วยให้เดินทางเร็วขึ้น (-1 ชม.)`, 'bubble-system');
   }
 
+  const staff = p.inventory.includes('ไม้เท้าเดินป่า') && hoursCost > 1;
+  if (staff) hoursCost -= 1;
+
   if (p.hoursLeft < hoursCost) { addMsg(`⏰ เวลาไม่พอสำรวจ ${loc.name} (ต้องการ ${hoursCost} ชม.)`, 'bubble-system'); return; }
+  if (staff) useTool(pi, 'ไม้เท้าเดินป่า');
 
   p.atCamp = false;
   loc.explored.push(pi);
@@ -2409,7 +2502,10 @@ function botExploreLocation(pi, li, hoursCost) {
     { story: `${p.name} มีความโชคดี พบสิ่งของราคาแพง!`, hp: 0, hunger: -2, energy: -8, loot: [loc.loot[Math.floor(Math.random()*loc.loot.length)], loc.loot[Math.floor(Math.random()*loc.loot.length)]], wild: null, event: 'good' },
   ];
   
-  const outcome = outcomes[Math.floor(Math.random() * outcomes.length)];
+  let outcome = outcomes[Math.floor(Math.random() * outcomes.length)];
+  if (p.scoutDay === G.day) outcome = Math.random() < 0.5 ? outcomes[1] : outcomes[4];
+  else if (outcome.event === 'bad' && exploreProtection(pi, loc) > 0 && Math.random() < 0.5) outcome = outcomes[0];
+  if (G.safeDay === G.day || p.scoutDay === G.day) outcome = { ...outcome, wild: null };
   // Use the location's own narration lines so bot turns don't repeat the same sentence
   const locLines = LOC_STORIES[loc.id];
   if (locLines) outcome.story = pick(locLines[outcome.event === 'none' ? 'normal' : outcome.event]).replace(/\{n\}/g, p.name);
@@ -2438,7 +2534,7 @@ function botExploreLocation(pi, li, hoursCost) {
   
   // Rare loot chance!
   if (Math.random() < 0.15) {
-    const rareLoot = ['ชุดปฐมพยาบาล','สมุดบันทึกนักสำรวจ','มีดพกพับ','เข็มทิศทองคำ','ขวานเหล็ก'][Math.floor(Math.random()*5)];
+    const rareLoot = ['ชุดปฐมพยาบาล','สมุดบันทึกนักสำรวจ','มีด','เข็มทิศทองคำ','ขวานเหล็ก'][Math.floor(Math.random()*5)];
     finalLoot.push(rareLoot);
     addMsg(`✨ ${p.name} พบไอเทมหายาก: ${rareLoot}!`, 'bubble-event-good');
   }
@@ -2453,6 +2549,8 @@ function botExploreLocation(pi, li, hoursCost) {
     const herb = loc.loot.find(item => ['สมุนไพรหายาก', 'สมุนไพร', 'ดอกไม้ยา'].includes(item)) || 'สมุนไพร';
     finalLoot.push(herb);
   }
+
+  grantLocMats(pi, loc);
 
   // WATER DROP RATE BOOST (Bug 9 - Only at water sources, 40% chance)
   const isWaterSource = loc && ['river', 'waterfall', 'swamp'].includes(loc.id);
@@ -2589,6 +2687,7 @@ function botFightOrFlee(pi, wild) {
   if (p.job.id === 'soldier') animalDmg = Math.ceil(animalDmg * 0.5);
   if (p.inventory.includes('ชุดเกราะเก่า')) animalDmg = Math.max(1, Math.ceil(animalDmg * 0.6));
   else if (p.inventory.includes('เครื่องรางศักดิ์สิทธิ์')) animalDmg = Math.max(1, Math.ceil(animalDmg * 0.8));
+  if (p.inventory.includes('โล่ไม้')) animalDmg = Math.max(1, Math.ceil(animalDmg * 0.7));
 
   const rounds = Math.ceil(getAnimalMaxHp(wild) / weaponDmg);
   const expectedDmg = (rounds - 1) * animalDmg;
@@ -2597,6 +2696,8 @@ function botFightOrFlee(pi, wild) {
   const willFight = p.hp - expectedDmg >= Math.round(35 * caution) && (armed || expectedDmg <= 15);
 
   if (willFight) {
+    if (armed) useTool(pi, weaponName);
+    if (expectedDmg && p.inventory.includes('โล่ไม้')) useTool(pi, 'โล่ไม้');
     p.hp = clamp(p.hp - expectedDmg, 0, 100);
     p.stats.damageTaken += expectedDmg;
     addMsg(`⚔️ ${p.name} ใช้${weaponName}ต่อสู้และกำจัด ${wild} ได้สำเร็จ!${expectedDmg ? ` (สูญเสีย HP -${expectedDmg})` : ''} ได้รับเนื้อสัตว์ 🥩`, expectedDmg ? 'bubble-player' : 'bubble-event-good');
@@ -2626,6 +2727,8 @@ function mockNarrateAction(pi, action, meta={}) {
   const danger = loc ? (loc.danger || 0.3) : 0.2;
   let badChance = danger * 0.6 + (weatherBad ? 0.1 : 0) + (p.energy < 20 ? 0.1 : 0);
   let goodChance = 0.35 + (p.sanity > 70 ? 0.05 : 0) + (p.job && (p.job.id === 'scout' || p.job.id === 'hunter') ? 0.05 : 0);
+  if (loc) badChance = Math.max(0, badChance - exploreProtection(pi, loc, true));
+  if (p.scoutDay === G.day) { badChance = 0; goodChance = 1; }
   const r = Math.random();
   const outcome = r < badChance ? 'bad' : r < badChance + goodChance ? 'good' : 'normal';
 
@@ -2662,7 +2765,7 @@ function mockNarrateAction(pi, action, meta={}) {
     energyDelta: energy,
     sanityDelta: sanity,
     loot,
-    wildlife: loc?.wild ? (Math.random() < 0.3 * (G.activeEvent.wildMult || 1) ? pick(loc.wild) : null) : null,
+    wildlife: (loc?.wild && G.safeDay !== G.day && p.scoutDay !== G.day) ? (Math.random() < 0.3 * (G.activeEvent.wildMult || 1) ? pick(loc.wild) : null) : null,
     event: outcome === 'normal' ? 'none' : outcome,
     eventText: outcome === 'good' ? pick(GOOD_TEXT) : outcome === 'bad' ? pick(BAD_TEXT) : ''
   };
@@ -2697,6 +2800,7 @@ function processActionResult(pi, parsed, meta, hoursCost) {
   applyExploreStatusEffects(pi);
 
   // Loot Processing
+  if (meta.loc && G.locations.includes(meta.loc)) grantLocMats(pi, meta.loc);
   let finalLoot = parsed.loot || [];
   if (meta.loc) {
     if (meta.loc.id === 'ruins' && G.activeEvent?.radioHint === 'ruins') finalLoot.push('โลหะเก่า');
@@ -2821,119 +2925,123 @@ function initiateCombat(pi, animalName, exploreHours, loot, exploreStory) {
   renderCombatScreen();
 }
 
+// Best melee weapon in the bag: { item, dmg, label }
+function combatWeapon(p) {
+  if (p.inventory.includes('หอก')) return { item:'หอก', dmg:40, label:'หอก 🗡️' };
+  if (p.inventory.includes('มีด')) return { item:'มีด', dmg:20, label:'มีด 🔪' };
+  return { item:null, dmg:8, label:'มือเปล่า' };
+}
+
 function renderCombatScreen() {
   if (!G.combatState) return;
   const cs = G.combatState;
   const p = G.players[cs.playerIndex];
-  
+
   document.getElementById('combat-wild-hp').textContent = cs.animalHp;
   document.getElementById('combat-player-hp').textContent = p.hp;
-  
+
   let desc = `คุณเดินทางเข้าไปในป่าและเผชิญหน้ากับ **${cs.animalName}** อย่างหลีกเลี่ยงไม่ได้!\n\n`;
-  desc += `*${cs.exploreStory}*\n\n`;
+  if (cs.exploreStory) desc += `*${cs.exploreStory}*\n\n`;
+  const gear = ['โล่ไม้', 'ชุดเกราะเก่า', 'ขวานเหล็ก', 'อาวุธโบราณ'].filter(i => p.inventory.includes(i));
+  if (gear.length) desc += `อุปกรณ์: ${gear.join(' · ')}\n`;
   desc += `จงเลือกตัดสินใจดำเนินการ:`;
   document.getElementById('combat-desc').innerHTML = formatMsg(desc);
-  
+
   const actionsList = document.getElementById('combat-actions-list');
   actionsList.innerHTML = '';
-  
-  const hasSpear = p.inventory.includes('หอก');
-  const hasKnife = p.inventory.includes('มีด');
-  let weaponName = 'มือเปล่า';
-  let dmg = 8;
-  if (hasSpear) {
-    weaponName = 'หอก 🗡️';
-    dmg = 40;
-  } else if (hasKnife) {
-    weaponName = 'มีด 🔪';
-    dmg = 20;
+  const addBtn = (cls, left, right, onclick) => {
+    const b = document.createElement('button');
+    b.className = 'combat-btn ' + cls;
+    b.innerHTML = `<span>${left}</span><span>${right}</span>`;
+    b.onclick = onclick;
+    actionsList.appendChild(b);
+  };
+
+  const w = combatWeapon(p);
+  let bonus = (p.inventory.includes('ขวานเหล็ก') ? 12 : 0) + (p.inventory.includes('อาวุธโบราณ') ? 20 : 0);
+  const left = w.item ? ` (เหลือ ${duraLeft(p, w.item)})` : '';
+  addBtn('combat-btn-fight', `⚔️ โจมตีด้วย ${w.label}${left}`, `DMG ${w.dmg + bonus}`, () => doCombatRound('fight'));
+  if (p.inventory.includes('ธนู')) {
+    addBtn('combat-btn-fight', `🏹 ยิงธนูจากระยะไกล (เหลือ ${duraLeft(p, 'ธนู')})`, 'DMG 25 · ไม่โดนสวน', () => doCombatRound('shoot'));
   }
-  
-  const fightBtn = document.createElement('button');
-  fightBtn.className = 'combat-btn combat-btn-fight';
-  fightBtn.innerHTML = `<span>⚔️ โจมตีด้วย ${weaponName}</span><span>สร้าง DMG ${dmg}</span>`;
-  fightBtn.onclick = () => doCombatRound('fight', dmg);
-  actionsList.appendChild(fightBtn);
-  
-  const fleeBtn = document.createElement('button');
-  fleeBtn.className = 'combat-btn combat-btn-flee';
-  fleeBtn.innerHTML = `<span>🏃 วิ่งหนีเอาชีวิตรอด</span><span>ใช้พลังงาน 15</span>`;
-  fleeBtn.onclick = () => doCombatRound('flee');
-  actionsList.appendChild(fleeBtn);
-  
-  const hideBtn = document.createElement('button');
-  hideBtn.className = 'combat-btn';
-  hideBtn.innerHTML = `<span>🍃 แอบซ่อนตัวในพุ่มไม้</span><span>เสี่ยงต่ำ / เสียเวลา 2 ชม.</span>`;
-  hideBtn.onclick = () => doCombatRound('hide');
-  actionsList.appendChild(hideBtn);
+  addBtn('combat-btn-flee', '🏃 วิ่งหนีเอาชีวิตรอด', 'ใช้พลังงาน 15', () => doCombatRound('flee'));
+  addBtn('', '🍃 แอบซ่อนตัวในพุ่มไม้', 'เสี่ยงต่ำ / เสียเวลา 2 ชม.', () => doCombatRound('hide'));
 }
 
-function doCombatRound(action, playerDmg) {
-  if (sendClientAction('combatRound', action, playerDmg)) return;
+// Damage an animal deals to the player this hit, after job, armour and shield
+function incomingDamage(pi, base) {
+  const p = G.players[pi];
+  let dmg = base;
+  if (p.job.id === 'soldier') dmg = Math.ceil(dmg * 0.5);
+  if (p.inventory.includes('ชุดเกราะเก่า')) {
+    dmg = Math.max(1, Math.ceil(dmg * 0.6));
+    addMsg(`🛡️ ชุดเกราะเก่าช่วยลดแรงปะทะ! (-40% ดาเมจ)`, 'bubble-system');
+  } else if (p.inventory.includes('เครื่องรางศักดิ์สิทธิ์')) {
+    dmg = Math.max(1, Math.ceil(dmg * 0.8));
+    addMsg(`✨ เครื่องรางส่องแสงปกป้องคุณ! (-20% ดาเมจ)`, 'bubble-system');
+  }
+  if (p.inventory.includes('โล่ไม้')) {
+    dmg = Math.max(1, Math.ceil(dmg * 0.7));
+    useTool(pi, 'โล่ไม้');
+    addMsg(`🛡️ โล่ไม้รับแรงกระแทกไว้ได้ส่วนหนึ่ง (-30%)`, 'bubble-system');
+  }
+  return dmg;
+}
+
+function winCombat(cs, p) {
+  addMsg(`🏆 คุณสามารถล้ม ${cs.animalName} ได้สำเร็จ!`, 'bubble-event-good');
+  p.stats.animalsDefeated++;
+  addToInventory(cs.playerIndex, 'เนื้อสัตว์');
+  addMsg(`🎒 ได้รับ: เนื้อสัตว์ 🥩`, 'bubble-event-good');
+  if (cs.loot && cs.loot.length) {
+    cs.loot.forEach(item => addToInventory(cs.playerIndex, item));
+    addMsg(`🎒 ได้รับของสำรวจ: ${cs.loot.join(', ')}`, 'bubble-event-good');
+  }
+  closeCombat(true);
+}
+
+function doCombatRound(action) {
+  if (sendClientAction('combatRound', action)) return;
   if (!G.combatState) return;
   const cs = G.combatState;
-  const p = G.players[cs.playerIndex];
-  
+  const pi = cs.playerIndex;
+  const p = G.players[pi];
+
+  if (action === 'shoot') {
+    if (!p.inventory.includes('ธนู')) return;
+    useTool(pi, 'ธนู');
+    cs.animalHp = Math.max(0, cs.animalHp - 25);
+    addMsg(`🏹 คุณยิงธนูใส่ ${cs.animalName} จากระยะไกล! ความเสียหาย 25 หน่วย`, 'bubble-player');
+    if (cs.animalHp <= 0) { winCombat(cs, p); return; }
+    renderCombatScreen();
+    return;
+  }
   if (action === 'fight') {
-    // PASSIVE: Damage boosts
-    let finalPlayerDmg = playerDmg;
-    if (p.inventory.includes('ขวานเหล็ก')) finalPlayerDmg += 12;
+    const w = combatWeapon(p);
+    let finalPlayerDmg = w.dmg;
+    if (p.inventory.includes('ขวานเหล็ก')) { finalPlayerDmg += 12; useTool(pi, 'ขวานเหล็ก'); }
     if (p.inventory.includes('อาวุธโบราณ')) finalPlayerDmg += 20;
+    if (w.item) useTool(pi, w.item);
 
     cs.animalHp = Math.max(0, cs.animalHp - finalPlayerDmg);
-    addMsg(`⚔️ คุณโจมตี ${cs.animalName} ได้รับความเสียหาย ${finalPlayerDmg} หน่วย!`, 'bubble-player');
-    
-    if (cs.animalHp <= 0) {
-      addMsg(`🏆 คุณสามารถล้ม ${cs.animalName} ได้สำเร็จ!`, 'bubble-event-good');
-      p.stats.animalsDefeated++;
-      addToInventory(cs.playerIndex, 'เนื้อสัตว์');
-      addMsg(`🎒 ได้รับ: เนื้อสัตว์ 🥩`, 'bubble-event-good');
-      
-      if (cs.loot && cs.loot.length) {
-        cs.loot.forEach(item => addToInventory(cs.playerIndex, item));
-        addMsg(`🎒 ได้รับของสำรวจ: ${cs.loot.join(', ')}`, 'bubble-event-good');
-      }
-      closeCombat(true);
-      return;
-    }
-    
-    let dmg = cs.animalDmg;
-    if (p.job.id === 'soldier') dmg = Math.ceil(dmg * 0.5);
-    
-    // PASSIVE: Defense boosts
-    if (p.inventory.includes('ชุดเกราะเก่า')) {
-      dmg = Math.max(1, Math.ceil(dmg * 0.6));
-      addMsg(`🛡️ ชุดเกราะเก่าช่วยลดแรงปะทะ! (-40% ดาเมจ)`, 'bubble-system');
-    } else if (p.inventory.includes('เครื่องรางศักดิ์สิทธิ์')) {
-      dmg = Math.max(1, Math.ceil(dmg * 0.8));
-      addMsg(`✨ เครื่องรางส่องแสงปกป้องคุณ! (-20% ดาเมจ)`, 'bubble-system');
-    }
+    addMsg(`⚔️ คุณโจมตี ${cs.animalName} ด้วย${w.label} ได้รับความเสียหาย ${finalPlayerDmg} หน่วย!`, 'bubble-player');
+    if (cs.animalHp <= 0) { winCombat(cs, p); return; }
 
+    const dmg = incomingDamage(pi, cs.animalDmg);
     p.hp = clamp(p.hp - dmg, 0, 100);
     p.stats.damageTaken += dmg;
     addMsg(`💥 ${cs.animalName} โจมตีกลับ! คุณได้รับความเสียหาย ${dmg} หน่วย!`, 'bubble-event-bad');
-    
-    if (p.hp <= 0) {
-      closeCombat(false);
-      killPlayer(cs.playerIndex);
-      return;
-    }
+    if (p.hp <= 0) { closeCombat(false); killPlayer(pi); return; }
     renderCombatScreen();
   }
   else if (action === 'flee') {
     p.energy = clamp(p.energy - 15, 0, 100);
     if (Math.random() < 0.3) {
-      let dmg = Math.ceil(cs.animalDmg * 0.7);
-      if (p.job.id === 'soldier') dmg = Math.ceil(dmg * 0.5);
+      const dmg = incomingDamage(pi, Math.ceil(cs.animalDmg * 0.7));
       p.hp = clamp(p.hp - dmg, 0, 100);
       p.stats.damageTaken += dmg;
       addMsg(`🏃 คุณพยายามวิ่งหนี แต่ถูก ${cs.animalName} ตะปบหลัง! ได้รับความเสียหาย ${dmg} หน่วย!`, 'bubble-event-bad');
-      
-      if (p.hp <= 0) {
-        closeCombat(false);
-        killPlayer(cs.playerIndex);
-        return;
-      }
+      if (p.hp <= 0) { closeCombat(false); killPlayer(pi); return; }
     } else {
       addMsg(`🏃 คุณวิ่งหนีจาก ${cs.animalName} จนพ้นอย่างปลอดภัย!`, 'bubble-player');
     }
@@ -2942,17 +3050,11 @@ function doCombatRound(action, playerDmg) {
   else if (action === 'hide') {
     p.hoursLeft = Math.max(0, p.hoursLeft - 2);
     if (Math.random() < 0.15) {
-      let dmg = cs.animalDmg;
-      if (p.job.id === 'soldier') dmg = Math.ceil(dmg * 0.5);
+      const dmg = incomingDamage(pi, cs.animalDmg);
       p.hp = clamp(p.hp - dmg, 0, 100);
       p.stats.damageTaken += dmg;
       addMsg(`🍃 คุณซ่อนตัวในพุ่มไม้ แต่ ${cs.animalName} ดมกลิ่นจนพบตัว! ได้รับความเสียหาย ${dmg} หน่วย!`, 'bubble-event-bad');
-      
-      if (p.hp <= 0) {
-        closeCombat(false);
-        killPlayer(cs.playerIndex);
-        return;
-      }
+      if (p.hp <= 0) { closeCombat(false); killPlayer(pi); return; }
     } else {
       addMsg(`🍃 คุณซ่อนตัวเงียบกริบในพุ่มไม้ จน ${cs.animalName} เดินผ่านไปโดยไม่พบคุณ!`, 'bubble-player');
     }
@@ -3033,6 +3135,16 @@ function endDay() {
   });
 
   // Camp structure end-of-day effects
+  if (G.camp.structures.includes('smoker')) {
+    const raw = { 'เนื้อสัตว์':'เนื้อย่าง', 'ปลา':'ปลาย่าง', 'ไก่ป่า':'เนื้อย่าง', 'กระต่าย':'เนื้อย่าง' };
+    let smoked = 0;
+    G.camp.sharedItems = G.camp.sharedItems.map(it => (raw[it] && smoked < 2) ? (smoked++, raw[it]) : it);
+    if (smoked) addMsg(`🍖 ชั้นรมควันทำให้ของดิบในคลังสุกแล้ว ${smoked} ชิ้น`, 'bubble-event-good');
+  }
+  if (G.camp.structures.includes('garden')) {
+    G.camp.sharedItems.push('ผลไม้', 'ผลไม้');
+    addMsg('🌱 แปลงผักให้ผลไม้ 2 ลูกเข้าคลังแคมป์', 'bubble-event-good');
+  }
   if (G.camp.structures.includes('watertank')) {
     G.camp.sharedItems.push('น้ำสะอาด','น้ำสะอาด');
     addMsg('💧 ถังเก็บน้ำแคมป์ผลิตน้ำสะอาด 2 ขวดอัตโนมัติ!', 'bubble-event-good');
@@ -3202,20 +3314,199 @@ function gameEnd(survived) {
 }
 
 // ===================== CAMP SYSTEM =====================
+// tier 1 anywhere · 2 needs the workbench · 3 needs camp Lv.3. alt: an alternative recipe
 const CAMP_STRUCTURES = [
-  { id:'campfire',  name:'กองไฟ',        emoji:'🔥', needs:['ไม้'],                    time:1, desc:'ปรุงอาหารได้ + ไล่สัตว์กลางคืน' },
-  { id:'stove',     name:'เตาดิน',        emoji:'🍳', needs:['หิน','ดินเหนียว'],          time:2, desc:'ปรุงอาหาร HP bonus + เตาอยู่ถาวร' },
-  { id:'hut',       name:'กระท่อม',       emoji:'🛖', needs:['ไม้','ผ้า'],               time:2, desc:'พักผ่อน energy +55, กำบังฝน/หนาว' },
-  { id:'fence',     name:'รั้วไม้',        emoji:'🪵', needs:['ไม้','เชือก'],              time:1, desc:'ลดโอกาสสัตว์บุกแคมป์' },
-  { id:'watertank', name:'ถังเก็บน้ำ',    emoji:'💧', needs:['หิน','ดินเหนียว'],          time:2, desc:'ผลิตน้ำสะอาด 2 ชิ้น/สิ้นวัน auto' },
-  { id:'clinic',    name:'มุมรักษา',      emoji:'🏥', needs:['สมุนไพร','ผ้า'],           time:1, desc:'ทุกคนรักษาฟรี 1 ครั้ง/วัน' },
-  { id:'trapfence', name:'รั้วกับดัก',    emoji:'🪤', needs:['กับดักสัตว์'],              time:1, desc:'จับสัตว์บุกแคมป์ได้ 100%' },
-  { id:'tower',     name:'หอคอยสัญญาณ',  emoji:'🔦', needs:['ไม้','โลหะเก่า'],           time:2, desc:'rescue chance +30% วันที่ 7' },
-  { id:'smoker',    name:'ชั้นรมควัน',    emoji:'🍖', needs:['ไม้'],                    time:1, desc:'เก็บเนื้อสัตว์ได้ไม่เน่า' },
-  // --- NEW MEGA UPGRADES ---
-  { id:'purifier',  name:'เครื่องกรองน้ำเหล็ก', emoji:'🏗️', needs:['แร่เหล็ก','เศษเหล็ก','แก้ว','ผ้าเก่า'], time:3, desc:'ผลิตน้ำสะอาด 3 ขวดฟรีทุกเช้า' },
-  { id:'fortified', name:'กำแพงเหล็กกันภัย',  emoji:'🛡️', needs:['ไม้เนื้อแข็ง','ชุดเกราะเก่า','กระสุนเก่า','เครื่องราง'], time:4, desc:'ป้องกันสัตว์/โจร 100% + ดรอปของจากศพโจร' },
+  { id:'campfire',  name:'กองไฟ',          emoji:'🔥', tier:1, needs:['ไม้','ไม้'], alt:['ไม้ขีดไฟ','ไม้'], time:1, desc:'ปรุงอาหารได้ · กันหนาว · สัตว์บุกแคมป์ยากขึ้น' },
+  { id:'workbench', name:'โต๊ะช่าง',        emoji:'🔨', tier:1, needs:['ไม้','ไม้','หิน'], time:1, desc:'ปลดล็อกสูตรขั้น 2' },
+  { id:'hut',       name:'กระท่อม',        emoji:'🛖', tier:1, needs:['ไม้','ไม้','ไม้','ผ้า'], alt:['เต็นท์ทหาร'], time:2, desc:'พักผ่อนพลังงาน +65 · กันฝน/หนาว' },
+  { id:'watertank', name:'ถังเก็บน้ำ',      emoji:'💧', tier:1, needs:['หิน','หิน','ผ้า'], time:2, desc:'ได้น้ำสะอาด 2 ขวดทุกคืน' },
+  { id:'clinic',    name:'มุมรักษา',        emoji:'🏥', tier:1, needs:['สมุนไพร','สมุนไพร','ผ้า'], time:1, desc:'ทุกคืนรักษาป่วย/พิษ/บาดเจ็บ HP +10' },
+  { id:'fence',     name:'รั้วไม้',          emoji:'🪵', tier:1, needs:['ไม้','ไม้','ไม้','เชือก'], time:1, desc:'สัตว์บุกแคมป์ยากขึ้น' },
+  { id:'smoker',    name:'ชั้นรมควัน',      emoji:'🍖', tier:1, needs:['ไม้','ไม้','หญ้าแห้ง'], time:1, desc:'ทุกคืนรมควันของดิบในคลังแคมป์ให้สุก 2 ชิ้น' },
+  { id:'garden',    name:'แปลงผัก',        emoji:'🌱', tier:2, needs:['เมล็ดพืช','ไม้','ไม้'], time:1, desc:'ได้ผลไม้ 2 ลูกเข้าคลังทุกคืน' },
+  { id:'stove',     name:'เตาดิน',          emoji:'🍳', tier:2, needs:['หิน','หิน','หิน'], time:2, desc:'ทำอาหารไม่เสียเวลา + อิ่มขึ้น 50%' },
+  { id:'trapfence', name:'รั้วกับดัก',      emoji:'🪤', tier:2, needs:['กับดักสัตว์','ไม้','ไม้'], time:1, desc:'สัตว์ที่บุกแคมป์ติดกับดัก ได้เนื้อสัตว์' },
+  { id:'tower',     name:'หอคอยสัญญาณ',    emoji:'🗼', tier:2, needs:['ไม้','ไม้','ไม้','โลหะเก่า','โลหะเก่า'], time:2, desc:'โอกาสกู้ภัย +25% วันที่ 7' },
+  { id:'lock',      name:'กุญแจคลัง',       emoji:'🔐', tier:2, needs:['โลหะเก่า','โลหะเก่า'], time:1, desc:'ของในคลังแคมป์ถูกขโมยยากขึ้นมาก' },
+  { id:'bell',      name:'ระฆังเตือนภัย',    emoji:'🔔', tier:2, needs:['โลหะเก่า','เชือก'], time:1, desc:'คนเฝ้ายามจับผู้บุกรุกได้ง่ายขึ้น' },
+  { id:'purifier',  name:'เครื่องกรองน้ำเหล็ก', emoji:'🏗️', tier:3, needs:['โลหะเก่า','โลหะเก่า','โลหะเก่า','หิน','แก้ว'], time:3, desc:'ได้น้ำสะอาด 3 ขวดทุกคืน' },
+  { id:'fortified', name:'กำแพงเหล็กกันภัย', emoji:'🛡️', tier:3, needs:['โลหะเก่า','โลหะเก่า','โลหะเก่า','โลหะเก่า','ไม้','ไม้','ไม้'], time:3, desc:'กันสัตว์บุกและคนบุกรุก 100% · ค่าสติไม่ลด' },
 ];
+
+// ===================== MATERIALS & RECIPE HELPERS =====================
+function ensureMats() {
+  if (!G.mats) G.mats = {};
+  BASIC_MATS.forEach(m => { if (typeof G.mats[m] !== 'number') G.mats[m] = 0; });
+  if (!Array.isArray(G.discovered)) G.discovered = CRAFTS.filter(c => c.start).map(c => c.name);
+  return G.mats;
+}
+function isBasicMat(item) { return BASIC_MATS.includes(item); }
+function matCount(name) { return (ensureMats()[name]) || 0; }
+function addMats(name, n, silent) {
+  ensureMats();
+  G.mats[name] = (G.mats[name] || 0) + n;
+  if (window.SX) SX.onMats(name, n, silent);
+}
+
+// Count how many of each name a recipe needs
+function countNeeds(needs) {
+  const c = {};
+  needs.forEach(n => { c[n] = (c[n] || 0) + 1; });
+  return c;
+}
+// Items (not materials) a player can use right now: bag, plus the camp store when at camp
+function itemPool(pi, useCamp) {
+  const p = G.players[pi];
+  return [...p.inventory, ...((useCamp && p.atCamp) ? G.camp.sharedItems : [])];
+}
+// What is still missing for a recipe: [{name, have, need}]
+function missingFor(pi, needs, useCamp = true) {
+  const pool = itemPool(pi, useCamp);
+  return Object.entries(countNeeds(needs)).map(([name, need]) => {
+    const have = isBasicMat(name) ? matCount(name) : pool.filter(i => i === name).length;
+    return { name, have, need };
+  }).filter(m => m.have < m.need);
+}
+function haveAll(pi, needs, useCamp = true) { return missingFor(pi, needs, useCamp).length === 0; }
+// Consume a recipe's needs: materials from the pouch, items from the bag first, then the camp store
+function takeAll(pi, needs, useCamp = true) {
+  if (!haveAll(pi, needs, useCamp)) return false;
+  const p = G.players[pi];
+  needs.forEach(name => {
+    if (isBasicMat(name)) { G.mats[name]--; return; }
+    const i = p.inventory.indexOf(name);
+    if (i > -1) { p.inventory.splice(i, 1); return; }
+    const j = G.camp.sharedItems.indexOf(name);
+    if (j > -1) G.camp.sharedItems.splice(j, 1);
+  });
+  if (window.SX) SX.onMats();
+  return true;
+}
+// Recipe or structure can be made at this tier? (2 = workbench, 3 = camp Lv.3)
+function tierUnlocked(tier) {
+  if (tier <= 1) return true;
+  if (tier === 2) return G.camp.structures.includes('workbench');
+  return G.camp.level >= 3;
+}
+function tierLockText(tier) {
+  return tier === 2 ? 'ต้องสร้าง 🔨 โต๊ะช่าง ที่แคมป์ก่อน' : 'ต้องพัฒนาแคมป์เป็น Lv.3 (สร้าง 5 อย่างขึ้นไป)';
+}
+// Engineer: crafts and builds 1 hour faster
+function craftHours(pi, base) {
+  const p = G.players[pi];
+  return Math.max(0, base - ((p.job && p.job.id === 'engineer') ? 1 : 0));
+}
+// Recipes become known when the team first holds one of their ingredients
+function discoverRecipes(silent) {
+  ensureMats();
+  const held = new Set();
+  G.players.forEach(p => p.alive && p.inventory.forEach(i => held.add(i)));
+  G.camp.sharedItems.forEach(i => held.add(i));
+  BASIC_MATS.forEach(m => { if (G.mats[m] > 0) held.add(m); });
+  const found = [];
+  CRAFTS.forEach(c => {
+    if (G.discovered.includes(c.name)) return;
+    if (c.needs.some(n => held.has(n))) { G.discovered.push(c.name); if (!c.side) found.push(c); }
+  });
+  if (found.length && !silent && window.SX) SX.onDiscover(found);
+  return found;
+}
+// Durability: uses left for the first copy of a tool in a player's bag
+function duraLeft(p, item) {
+  if (!DURABILITY[item] || !p.inventory.includes(item)) return null;
+  if (!p.dura) p.dura = {};
+  if (typeof p.dura[item] !== 'number') p.dura[item] = DURABILITY[item];
+  return p.dura[item];
+}
+// Use a tool once; it breaks (one copy removed) when it runs out. Returns false if the player doesn't have it.
+function useTool(pi, item) {
+  const p = G.players[pi];
+  const left = duraLeft(p, item);
+  if (left === null) return false;
+  p.dura[item] = left - 1;
+  if (p.dura[item] <= 0) {
+    p.inventory.splice(p.inventory.indexOf(item), 1);
+    delete p.dura[item];
+    addMsg(`💥 ${item} ของ ${p.name} พังแล้ว!`, 'bubble-event-bad');
+  }
+  return true;
+}
+// Guaranteed materials from exploring a location
+function grantLocMats(pi, loc) {
+  const pool = LOC_MATS[loc && loc.id];
+  if (!pool) return [];
+  const p = G.players[pi];
+  const n = 1 + Math.floor(Math.random() * 3);
+  const got = [];
+  for (let i = 0; i < n; i++) got.push(pool[Math.floor(Math.random() * pool.length)]);
+  if (p.inventory.includes('ไฟฉาย') && ['cave','temple','ruins'].includes(loc.id)) got.push(pool[0]);
+  got.forEach(m => addMats(m, 1, true));
+  const counts = countNeeds(got);
+  addMsg(`🧺 ${p.name} เก็บวัสดุได้: ${Object.entries(counts).map(([m, k]) => `${MAT_ICON[m] || ''}${m} ×${k}`).join(' · ')}`, 'bubble-event-good');
+  discoverRecipes();
+  return got;
+}
+function isValuable(item) { return VALUABLES.includes(item); }
+
+// Break an item down into materials (free action)
+function doSalvage(pi, item) {
+  if (sendClientAction('salvage', pi, item)) return;
+  const p = G.players[pi];
+  const out = SALVAGE[item];
+  const idx = p.inventory.indexOf(item);
+  if (!out || idx === -1) return;
+  p.inventory.splice(idx, 1);
+  Object.entries(out).forEach(([m, n]) => addMats(m, n, true));
+  discoverRecipes();
+  addMsg(`🔧 ${p.name} แยกชิ้นส่วน ${item} ได้ ${Object.entries(out).map(([m, n]) => `${MAT_ICON[m]}${m} ×${n}`).join(' · ')}`, 'bubble-event-good');
+  renderAllPanels();
+  updateCampUI();
+  if (window.SX) SX.onMats();
+}
+// Engineer: restore a worn tool for 1 material and 1 hour
+function doRepair(pi, item) {
+  if (sendClientAction('repair', pi, item)) return;
+  const p = G.players[pi];
+  if (!p.job || p.job.id !== 'engineer' || duraLeft(p, item) === null || p.hoursLeft < 1) return;
+  const mat = matCount('โลหะเก่า') > 0 ? 'โลหะเก่า' : matCount('ไม้') > 0 ? 'ไม้' : null;
+  if (!mat) { addMsg('❌ ต้องมีไม้หรือโลหะ 1 ชิ้นเพื่อซ่อม', 'bubble-system'); return; }
+  G.mats[mat]--;
+  p.dura[item] = DURABILITY[item];
+  addMsg(`🔧 ${p.name} ซ่อม ${item} กลับมาใช้ได้ ${DURABILITY[item]} ครั้ง`, 'bubble-event-good');
+  renderAllPanels();
+  spendTime(pi, 1);
+}
+// How much the player's gear lowers the chance of a bad explore here (torch is used up when it helps)
+function exploreProtection(pi, loc, consume) {
+  const p = G.players[pi];
+  const dark = !loc.id || ['cave','temple','ruins','graveyard'].includes(loc.id);
+  let cut = 0;
+  if (dark && p.inventory.includes('ไฟฉาย')) cut += 0.25;
+  else if (dark && p.inventory.includes('คบเพลิง')) { cut += 0.2; if (consume) useTool(pi, 'คบเพลิง'); }
+  if (['cliff','waterfall'].includes(loc.id) && p.inventory.includes('เชือกยาว')) cut += 0.25;
+  return cut;
+}
+
+
+// What the team carries when the plane goes down
+const STARTER_MATS = { 'ไม้':2, 'หิน':1, 'เชือก':1, 'ผ้า':1 };
+const RAW_SICK_CHANCE = 0.5; // chance raw meat/fish/eggs make you sick
+// What each healing item does ('สมุนไพร' is the raw material from the pouch)
+const HEAL_ITEMS = {
+  'ชุดปฐมพยาบาล':{ hp:35, cures:['sick','poison','injured'] },
+  'สมุนไพรหายาก':{ hp:30, cures:['sick','poison','injured'] },
+  'ยาสมุนไพร':   { hp:25, cures:['sick','poison','injured'] },
+  'ผ้าพันแผล':   { hp:15, cures:['injured'] },
+  'สมุนไพร':     { hp:10, cures:['sick'], label:'สมุนไพรสด' },
+};
+// Best healing item for the player's current condition, or null
+function pickHealItem(p) {
+  const onlyInjured = p.statuses.includes('injured') && !p.statuses.some(s => s === 'sick' || s === 'poison');
+  if (onlyInjured && p.inventory.includes('ผ้าพันแผล')) return 'ผ้าพันแผล';
+  const item = ['ชุดปฐมพยาบาล', 'สมุนไพรหายาก', 'ยาสมุนไพร', 'ผ้าพันแผล'].find(m => p.inventory.includes(m));
+  if (item) return item;
+  return matCount('สมุนไพร') > 0 ? 'สมุนไพร' : null;
+}
 
 const CAMP_RECIPES = [
   { input:'เนื้อสัตว์',   needs:'campfire|stove', output:'เนื้อย่าง',   hungerGain:40, hpGain:5,  desc:'เนื้อย่าง — หิว+40 HP+5' },
@@ -3228,121 +3519,55 @@ const CAMP_RECIPES = [
   { input:'มอสเรืองแสง',  needs:'campfire|stove', output:'ซุปสมาธิ',   hungerGain:20, hpGain:10, desc:'ซุปสมาธิ — Sanity +50' },
 ];
 
+// The camp menu is now the workbench (assets/systems.js), opened on the camp tab
 function openCampMenu() {
-  const pi = getMyPlayerIndex(); // Always show user's inventory when they open the menu
+  const pi = getMyPlayerIndex();
   if (pi === -1) return;
-  const p = G.players[pi];
-  const isHumanTurn = (G.currentPlayer === pi);
-  if (!p || !p.alive) return;
-
-  const hasFire = G.camp.structures.includes('campfire') || G.camp.structures.includes('stove');
-  
-  // Build cook options
-  let cookHTML = '';
-  if (hasFire) {
-    const cookable = CAMP_RECIPES.filter(r => p.inventory.includes(r.input));
-    if (cookable.length) {
-      cookHTML = '<div style="margin-top:10px;"><div style="font-size:11px;font-weight:700;color:var(--amber2);margin-bottom:6px;">🍳 ปรุงอาหาร (มีกองไฟ)</div>';
-      cookable.forEach(r => {
-        const canCook = isHumanTurn && p.atCamp;
-        cookHTML += `<div style="padding:7px;background:var(--bg4);border:0.5px solid var(--amber);border-radius:5px;margin-bottom:5px;cursor:${canCook?'pointer':'not-allowed'};opacity:${canCook?1:0.5}"
-          onclick="${canCook ? `doCookFood(${pi},'${r.input}','${r.output}',${r.hungerGain},${r.hpGain});closeShare()` : ''}">
-          <div style="font-size:12px;color:var(--amber2);">🔥 ปรุง ${r.input} → ${r.output}</div>
-          <div style="font-size:10px;color:var(--text3);">${r.desc} | เวลา 1 ชม.</div>
-        </div>`;
-      });
-      cookHTML += '</div>';
-    }
-  } else {
-    cookHTML = '<div style="font-size:10px;color:var(--text3);margin-top:8px;">⚠️ ต้องสร้างกองไฟหรือเตาดินก่อนจึงจะปรุงอาหารได้</div>';
-  }
-
-  // Build structure options
-  const isEngineer = p.job && p.job.id === 'engineer';
-  let structHTML = '<div style="margin-top:10px;"><div style="font-size:11px;font-weight:700;color:var(--green2);margin-bottom:6px;">🔨 สร้างสิ่งปลูกสร้าง</div>';
-  CAMP_STRUCTURES.forEach(s => {
-    const alreadyBuilt = G.camp.structures.includes(s.id);
-    const needs = isEngineer ? s.needs.slice(0,-1) : s.needs;
-    const canBuild = isHumanTurn && p.atCamp && !alreadyBuilt && needs.every(mat => {
-      const inv = [...p.inventory, ...G.camp.sharedItems];
-      const idx = inv.indexOf(mat);
-      if (idx > -1) { inv.splice(idx,1); return true; }
-      return false;
-    });
-    const matList = [...new Set(s.needs)].map(m => `${m}x${s.needs.filter(x=>x===m).length}`).join('+');
-    structHTML += `<div style="padding:7px;background:var(--bg4);border:0.5px solid ${alreadyBuilt?'var(--green)':canBuild?'var(--border)':'rgba(80,80,80,0.3)'};border-radius:5px;margin-bottom:5px;cursor:${canBuild?'pointer':'default'};opacity:${canBuild||alreadyBuilt?1:0.4}"
-      onclick="${canBuild?`doBuildCampStructure(${pi},'${s.id}','${s.name}');closeShare()`:''}"
-    >
-      <div style="font-size:12px;color:${alreadyBuilt?'var(--green2)':canBuild?'var(--text)':'var(--text3)'};">${s.emoji} ${s.name} ${alreadyBuilt?'✅ สร้างแล้ว':''}</div>
-      <div style="font-size:10px;color:var(--text3);">วัสดุ: ${matList} | เวลา: ${s.time}ชม. | ${s.desc}</div>
-    </div>`;
-  });
-  structHTML += '</div>';
-
-  // Shared item deposit
-  let sharedHTML = `<div style="margin-top:10px;"><div style="font-size:11px;font-weight:700;color:var(--blue2);margin-bottom:6px;">📦 ฝากของเข้าคลังแคมป์</div>`;
-  if (p.inventory.length) {
-    p.inventory.forEach((item,idx) => {
-      const canDep = p.atCamp;
-      sharedHTML += `<div style="display:inline-block;padding:3px 7px;background:var(--bg4);border:0.5px solid var(--border);border-radius:4px;font-size:10px;color:var(--text2);cursor:${canDep?'pointer':'not-allowed'};margin:2px;opacity:${canDep?1:0.5}"
-        onclick="${canDep ? `depositToCamp(${pi},${idx});closeShare()` : ''}">${item} →📦</div>`;
-    });
-  } else {
-    sharedHTML += '<div style="font-size:10px;color:var(--text3);">ไม่มีของในครอบครอง</div>';
-  }
-  sharedHTML += '</div>';
-
-  document.getElementById('share-title').textContent = '🏕️ จัดการแคมป์';
-  document.getElementById('share-target-list').innerHTML = cookHTML + structHTML + sharedHTML + '<div style="margin-top:8px;font-size:10px;color:var(--text3);">สิ่งปลูกสร้างแคมป์ใช้ร่วมกันได้ทุกคน</div>';
-  document.getElementById('share-overlay').style.display = 'flex';
+  if (window.SX) SX.openWorkbench(pi, 'camp');
 }
 
-function doCookFood(pi, inputItem, outputItem, hungerGain, hpGain) {
-  if (sendClientAction('cook', pi, inputItem, outputItem, hungerGain, hpGain)) return;
+function doCookFood(pi, inputItem, outputItem) {
+  if (sendClientAction('cook', pi, inputItem, outputItem)) return;
   const p = G.players[pi];
   const idx = p.inventory.indexOf(inputItem);
-  if (idx === -1) { addMsg('❌ ไม่มีวัตถุดิบ', 'bubble-system'); return; }
-  const isChef = p.job && p.job.id === 'chef';
-  p.inventory.splice(idx, 1);
+  const campIdx = idx === -1 && p.atCamp ? G.camp.sharedItems.indexOf(inputItem) : -1;
+  if (idx === -1 && campIdx === -1) { addMsg('❌ ไม่มีวัตถุดิบ', 'bubble-system'); spendTime(pi, 0); return; }
+  if (idx > -1) p.inventory.splice(idx, 1); else G.camp.sharedItems.splice(campIdx, 1);
+  const hasStove = G.camp.structures.includes('stove');
   addToInventory(pi, outputItem);
-  const bonus = isChef ? ' [พ่อครัว: คุณค่าเพิ่ม +50%]' : '';
-  const finalHunger = isChef ? Math.ceil(hungerGain * 1.5) : hungerGain;
-  const finalHp = isChef ? Math.ceil(hpGain * 1.5) : hpGain;
-  addMsg(`🍳 ${p.name} ปรุง ${inputItem} → ${outputItem} สำเร็จ!${bonus} (หิว+${finalHunger} HP+${finalHp} เมื่อกิน)`, 'bubble-event-good');
+  let extra = '';
+  if (hasStove && Math.random() < 0.5) { addToInventory(pi, outputItem); extra = ' 🍳 เตาดินทำให้ได้ 2 ชิ้น!'; }
+  addMsg(`🍳 ${p.name} ปรุง ${inputItem} → ${outputItem} สำเร็จ!${extra}`, 'bubble-event-good');
   p.stats.itemsCrafted++;
+  updateCampUI();
   renderAllPanels();
-  spendTime(pi, 1);
+  spendTime(pi, hasStove ? 0 : 1);
 }
 
-function doBuildCampStructure(pi, structId, structName) {
-  if (sendClientAction('build', pi, structId, structName)) return;
+function doBuildCampStructure(pi, structId) {
+  if (sendClientAction('build', pi, structId)) return;
   const p = G.players[pi];
-  if (!p.atCamp) { addMsg('❌ ต้องอยู่ที่แคมป์เพื่อสร้างสิ่งปลูกสร้าง', 'bubble-system'); return; }
   const s = CAMP_STRUCTURES.find(x => x.id === structId);
-  if (!s) return;
-  const isEngineer = p.job && p.job.id === 'engineer';
-  const needs = isEngineer ? s.needs.slice(0,-1) : s.needs;
-
-  // Try to take from player inventory first, then camp shared
-  const tempInv = [...p.inventory];
-  const tempShared = [...G.camp.sharedItems];
-  const usedFrom = { player:[], shared:[] };
-  for (const mat of needs) {
-    const pi2 = tempInv.indexOf(mat);
-    if (pi2 > -1) { tempInv.splice(pi2,1); usedFrom.player.push(mat); continue; }
-    const si = tempShared.indexOf(mat);
-    if (si > -1) { tempShared.splice(si,1); usedFrom.shared.push(mat); continue; }
-    addMsg(`❌ วัสดุไม่พอ — ขาด ${mat}`, 'bubble-system'); return;
+  if (!s || G.camp.structures.includes(s.id)) { spendTime(pi, 0); return; }
+  if (!p.atCamp) { addMsg('❌ ต้องอยู่ที่แคมป์เพื่อสร้างสิ่งปลูกสร้าง', 'bubble-system'); spendTime(pi, 0); return; }
+  if (!tierUnlocked(s.tier)) { addMsg(`🔒 ${tierLockText(s.tier)}`, 'bubble-system'); spendTime(pi, 0); return; }
+  const recipe = haveAll(pi, s.needs) ? s.needs : (s.alt && haveAll(pi, s.alt) ? s.alt : null);
+  if (!recipe) {
+    addMsg(`❌ วัสดุไม่พอ — ขาด ${missingFor(pi, s.needs).map(m => `${m.name} ×${m.need - m.have}`).join(', ')}`, 'bubble-system');
+    spendTime(pi, 0);
+    return;
   }
-  p.inventory = tempInv;
-  G.camp.sharedItems = tempShared;
-  G.camp.structures.push(structId);
+  const hrs = craftHours(pi, s.time);
+  if (p.hoursLeft < hrs) { addMsg('⏰ เวลาไม่พอสำหรับสร้าง', 'bubble-system'); spendTime(pi, 0); return; }
+  takeAll(pi, recipe);
+  G.camp.structures.push(s.id);
   updateCampLevel();
   updateCampUI();
-  addMsg(`🔨 ${p.name} สร้าง ${s.emoji} ${s.name} ให้กับแคมป์รวมแล้ว!${isEngineer?' [วิศวกร: ใช้วัสดุน้อยลง]':''}`, 'bubble-event-good');
+  addMsg(`🔨 ${p.name} สร้าง ${s.emoji} ${s.name} ให้แคมป์แล้ว! — ${s.desc}`, 'bubble-event-good');
   p.stats.itemsCrafted++;
+  if (window.SX) SX.celebrate(s.emoji, s.name);
   renderAllPanels();
-  spendTime(pi, s.time);
+  spendTime(pi, hrs);
 }
 
 // ฟังก์ชัน depositToCamp ถูกใช้งานที่บรรทัด 2066 เพื่อความปลอดภัยและถูกต้องครับ
@@ -3353,37 +3578,50 @@ function updateCampLevel() {
 }
 
 function updateCampUI() {
+  // Basic materials that land in the camp store move into the material pouch
+  if (G.camp && Array.isArray(G.camp.sharedItems)) {
+    let moved = false;
+    G.camp.sharedItems = G.camp.sharedItems.map(it => ITEM_ALIAS[it] || it).filter(it => {
+      if (!isBasicMat(it) && !MAT_ALIAS[it]) return true;
+      const [m, n] = MAT_ALIAS[it] || [it, 1];
+      addMats(m, n, true);
+      moved = true;
+      return false;
+    });
+    if (moved) discoverRecipes();
+  }
+
   const levelNames = { 1:'Lv. 1 ค่ายชั่วคราว', 2:'Lv. 2 ค่ายพักแรม', 3:'Lv. 3 ฐานทัพ' };
   const badge = document.getElementById('camp-level-badge');
   if (badge) badge.textContent = levelNames[G.camp.level] || levelNames[1];
 
   const structList = document.getElementById('camp-structures-list');
   if (structList) {
-    const icons = { 'campfire':'🔥','stove':'🍳','hut':'🛖','fence':'🪵','watertank':'💧','clinic':'🏥','trapfence':'🪤','tower':'🔦','smoker':'🍖' };
-    const all = ['campfire','hut','fence','watertank','clinic'];
-    structList.innerHTML = all.map(id => {
+    const key = ['campfire','workbench','hut','watertank','fence','clinic'];
+    const ids = [...new Set([...key, ...G.camp.structures])];
+    structList.innerHTML = ids.map(id => {
       const built = G.camp.structures.includes(id);
       const s = CAMP_STRUCTURES.find(x => x.id === id);
-      return `<div style="font-size:10px;${built?'color:var(--green2)':'color:var(--text3)'};text-align:center;padding:4px;background:var(--bg2);border:0.5px solid ${built?'var(--green)':'var(--border)'};border-radius:5px;">
-        ${icons[id]||'🏗️'} ${built?(s?s.name:id):`ไม่มี${s?s.name:id}`}
+      if (!s) return '';
+      return `<div title="${s.desc}" style="font-size:10px;${built?'color:var(--green2)':'color:var(--text3)'};text-align:center;padding:4px;background:var(--bg2);border:0.5px solid ${built?'var(--green)':'var(--border)'};border-radius:5px;">
+        ${s.emoji} ${built ? s.name : `ไม่มี${s.name}`}
       </div>`;
     }).join('');
   }
 
   const sharedEl = document.getElementById('camp-shared-items');
   if (sharedEl) {
-    // Make container a drop zone
     sharedEl.setAttribute('ondragover', 'event.preventDefault()');
     sharedEl.setAttribute('ondrop', 'handleDrop(event)');
-
     if (!G.camp.sharedItems.length) {
       sharedEl.innerHTML = '<span style="color:var(--text3);font-style:italic;">ว่างเปล่า (วางของที่นี่)</span>';
     } else {
       sharedEl.innerHTML = G.camp.sharedItems.map((item, idx) =>
-        `<span style="font-size:10px;padding:2px 5px;background:var(--bg4);border:0.5px solid var(--border);border-radius:3px;color:var(--text2);cursor:pointer;" onclick="takeFromCamp(${getMyPlayerIndex()}, ${idx})">${item}</span>`
+        `<span style="font-size:10px;padding:2px 5px;background:var(--bg4);border:0.5px solid ${isValuable(item)?'var(--amber2)':'var(--border)'};border-radius:3px;color:${isValuable(item)?'var(--amber2)':'var(--text2)'};cursor:pointer;" onclick="takeFromCamp(${getMyPlayerIndex()}, ${idx})">${isValuable(item)?'💎 ':''}${item}</span>`
       ).join('');
     }
   }
+  if (window.SX) SX.renderMatBar();
 }
 
 // Add handleDrop function
@@ -3622,71 +3860,44 @@ function selectPvpTarget(fromPi, toPi, method) {
 
 
 function showCraftPicker(pi) {
-  const p = G.players[pi];
-  const isEngineer = p.job.id === 'engineer';
-  let html = '<div style="padding:12px 16px;">';
-  html += '<div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px;">🔨 คราฟของใช้</div>';
-  CRAFTS.forEach(c => {
-    const needs = isEngineer ? c.needs.slice(0, c.needs.length-1) : c.needs;
-    const canCraft = needs.every(mat => p.inventory.includes(mat));
-    html += `<div style="padding:7px;background:var(--bg4);border:0.5px solid var(--border);border-radius:5px;margin-bottom:5px;cursor:${canCraft?'pointer':'not-allowed'};opacity:${canCraft?1:0.4}"
-      onclick="${canCraft?`doCraft(${pi},'${c.name}');closeShare()`:''}">
-      <div style="font-size:12px;color:var(--text);font-weight:500;">${c.name}</div>
-      <div style="font-size:10px;color:var(--text3);">วัสดุ: ${needs.join(',')} | เวลา: ${c.time} ชม. | ${c.desc}</div>
-    </div>`;
-  });
-  html += '<button class="share-close" style="margin-top:8px" onclick="closeShare()">ปิด</button></div>';
-  document.getElementById('share-title').textContent = '';
-  document.getElementById('share-target-list').innerHTML = html;
-  document.getElementById('share-overlay').style.display = 'flex';
+  if (window.SX) SX.openWorkbench(pi, 'tool');
 }
 
 function doCraft(pi, itemName) {
   if (sendClientAction('craft', pi, itemName)) return;
   const p = G.players[pi];
-  const c = CRAFTS.find(x=>x.name===itemName);
+  const c = CRAFTS.find(x => x.name === itemName);
   if (!c) return;
-  const isEngineer = p.job.id === 'engineer';
-  const needs = isEngineer ? c.needs.slice(0, c.needs.length-1) : c.needs;
-  
-  // Validate materials (Bug 12)
-  const tempInv = [...p.inventory];
-  const hasAll = needs.every(mat => {
-    const idx = tempInv.indexOf(mat);
-    if (idx > -1) {
-      tempInv.splice(idx, 1);
-      return true;
-    }
-    return false;
-  });
-  
-  if (!hasAll) {
-    addMsg('❌ วัตถุดิบไม่พอสำหรับการคราฟ', 'bubble-system');
+  ensureMats();
+  if (c.side && p.side !== c.side) { spendTime(pi, 0); return; }
+  if (!tierUnlocked(c.tier)) { addMsg(`🔒 ${tierLockText(c.tier)}`, 'bubble-system'); spendTime(pi, 0); return; }
+  const hrs = craftHours(pi, c.time);
+  if (p.hoursLeft < hrs) { addMsg('⏰ เวลาไม่พอสำหรับคราฟ', 'bubble-system'); spendTime(pi, 0); return; }
+  if (!haveAll(pi, c.needs)) {
+    addMsg(`❌ วัตถุดิบไม่พอ — ขาด ${missingFor(pi, c.needs).map(m => `${m.name} ×${m.need - m.have}`).join(', ')}`, 'bubble-system');
+    spendTime(pi, 0);
     return;
   }
-  
-  p.inventory = tempInv;
-  
-  if (itemName === 'ธูปสมุนไพร') {
-    G.players.forEach(p2 => { if (p2.alive) p2.sanity = 100; });
-    addMsg(`✨ ${p.name} จุด "ธูปสมุนไพร" กลิ่นหอมอบอวลไปทั่วแคมป์... ทุกคน Sanity กลับมาเต็ม 100% และหายจากความกลัว!`, 'bubble-event-good');
-  } else if (itemName === 'ชุดแผนที่นำทาง') {
-    addToInventory(pi, itemName);
-    addMsg(`🗺️ ${p.name} คราฟ "ชุดแผนที่นำทาง" สำเร็จ! จากนี้ไปจะมองเห็น Loot ทั้งหมดและไม่โดนกับดักพื้นที่อีกต่อไป`, 'bubble-event-good');
+  const instant = itemName === 'ธูปสมุนไพร';
+  if (!instant && p.inventory.length >= getInventoryLimit(p) && !p.atCamp) {
+    addMsg('🎒 กระเป๋าเต็ม — กลับแคมป์หรือใช้ของก่อนค่อยคราฟ', 'bubble-system');
+    spendTime(pi, 0);
+    return;
+  }
+  takeAll(pi, c.needs);
+  if (!G.discovered.includes(c.name)) G.discovered.push(c.name);
+  if (instant) {
+    G.players.forEach(p2 => { if (p2.alive) p2.sanity = clamp(p2.sanity + 40, 0, 100); });
+    addMsg(`🪔 ${p.name} จุดธูปสมุนไพร กลิ่นหอมอบอวลทั่วแคมป์ — ทุกคนค่าสติ +40`, 'bubble-event-good');
   } else {
     addToInventory(pi, itemName);
+    addMsg(`${c.icon} ${p.name} คราฟ "${itemName}" สำเร็จ! — ${c.desc}`, 'bubble-event-good');
   }
-
   p.stats.itemsCrafted++;
-  if (itemName === 'ที่พักชั่วคราว') {
-    addMsg(`🔨 ${p.name} คราฟ "${itemName}" สำเร็จ! ใช้พักผ่อนคราวหลังจะได้พลังงาน +50 (ใช้งาน 1 ครั้ง)`, 'bubble-event-good');
-  } else if (itemName === 'เครื่องกลั่นน้ำ') {
-    addMsg(`🔨 ${p.name} คราฟ "${itemName}" สำเร็จ! อุปกรณ์จะผลิตน้ำสะอาดให้ตอนสิ้นวัน`, 'bubble-event-good');
-  } else if (itemName !== 'ธูปสมุนไพร' && itemName !== 'ชุดแผนที่นำทาง') {
-    addMsg(`🔨 ${p.name} คราฟ "${itemName}" สำเร็จ!${isEngineer?' [วิศวกร: ใช้วัสดุน้อยลง 1]':''}`, 'bubble-event-good');
-  }
+  if (window.SX) SX.celebrate(c.icon, itemName);
+  updateCampUI();
   renderAllPanels();
-  spendTime(pi, c.time);
+  spendTime(pi, hrs);
 }
 
 // ===================== RENDER =====================
@@ -3708,7 +3919,8 @@ function renderPanel(i) {
   const isHuman = (G.mode === 'multi') ? (p.id === socket?.id) : (i === 0);
   const humanIsSpy = (G.players[myIndex] && G.players[myIndex].job && G.players[myIndex].job.id === 'spy');
 
-  const shouldReveal = isHuman || humanIsSpy || !p.alive;
+  // bags are secret; the spy uses the skill to look at one person instead
+  const shouldReveal = isHuman || !p.alive;
   
   let invHTML = '';
   if (shouldReveal) {
@@ -3718,17 +3930,12 @@ function renderPanel(i) {
       const canDeposit = isHuman && p.atCamp;
       
       // Calculate craftable hint
-      const recipes = CRAFTS.filter(c => c.needs.includes(item));
-      const recipeText = recipes.length ? `\nคราฟได้: ${recipes.map(r=>r.name).join(', ')}` : '\n(ใช้ประโยนช์อื่นๆ)';
+      const recipes = CRAFTS.filter(c => c.needs.includes(item) && (!c.side || p.side === c.side));
+      const recipeText = recipes.length ? `\nคราฟได้: ${recipes.map(r=>r.name).join(', ')}`
+        : SALVAGE[item] ? '\nแยกชิ้นส่วนเป็นวัสดุได้ที่โต๊ะช่าง' : isValuable(item) ? '\nของมีค่า (ขายกับพ่อค้า / คะแนนตอนจบ)' : '';
       const tooltip = `${item}${recipeText}`;
-      const isUsedInCraftable = recipes.some(c => {
-        const inv = [...p.inventory];
-        return c.needs.every(need => {
-          const nIdx = inv.indexOf(need);
-          if (nIdx > -1) { inv.splice(nIdx, 1); return true; }
-          return false;
-        }) && p.hoursLeft >= c.time;
-      });
+      const isUsedInCraftable = recipes.some(c => tierUnlocked(c.tier) && haveAll(i, c.needs) && p.hoursLeft >= craftHours(i, c.time));
+      const dura = duraLeft(p, item);
 
       // ... (previous logic for CSS and tooltip)
       
@@ -3738,7 +3945,7 @@ function renderPanel(i) {
         ondragstart="event.dataTransfer.setData('text/plain', '${idx}')"
         onclick="showItemInfo('${item.replace(/'/g, "\\'")}')" 
         oncontextmenu="if(${canDeposit}){depositToCamp(${i}, ${idx});return false;}">
-        ${item}${isUsedInCraftable ? '<div class="craft-badge" style="width:6px;height:6px;top:0;right:0;"></div>' : ''}
+        ${isValuable(item) ? '💎 ' : ''}${item}${dura !== null ? ` <b style="color:${dura <= 1 ? 'var(--red3)' : 'var(--amber2)'}">⚒${dura}</b>` : ''}${isUsedInCraftable ? '<div class="craft-badge" style="width:6px;height:6px;top:0;right:0;"></div>' : ''}
       </span>`;
     }).join('');
   } else {
@@ -3812,12 +4019,8 @@ function renderLocations() {
 }
 
 function buildCraftList() {
-  document.getElementById('craft-list').innerHTML = CRAFTS.map(c=>`
-    <div class="craft-item" title="${c.desc}">
-      <div>${c.name}</div>
-      <div class="craft-req">🪵 ${c.needs.join('+')} | ⏰${c.time}ชม.</div>
-    </div>
-  `).join('');
+  const el = document.getElementById('craft-list');
+  if (el) el.innerHTML = CRAFTS.filter(c => !c.side).map(c => `<div class="craft-item" title="${c.desc}"><div>${c.icon} ${c.name}</div><div class="craft-req">${c.needs.join('+')} | ⏰${c.time}ชม.</div></div>`).join('');
 }
 
 function addWildlife(text) {
@@ -3891,7 +4094,7 @@ function setButtons(disabled) {
 
 function clamp(v,mn,mx) { return Math.max(mn,Math.min(mx,v)); }
 
-function isFood(item) { return ['ปลา','ปลาย่าง','น้ำสะอาด','ผลไม้','ผลไม้มีพิษ','สมุนไพร','เห็ด','น้ำเน่า','กบ','แมลง','อาหารกระป๋อง','อาหารเก่า','อาหารอุ่น','ค้างคาว','กวาง','กระต่าย','เนื้อสัตว์','เนื้อย่าง','ซุปเห็ด','ยาบำรุง','ไข่','หม้อไฟป่า','ซุปสมาธิ'].includes(item); }
+function isFood(item) { return ['ปลา','ปลาย่าง','น้ำสะอาด','ผลไม้','ผลไม้มีพิษ','เห็ด','น้ำเน่า','กบ','แมลง','อาหารกระป๋อง','อาหารเก่า','อาหารอุ่น','ค้างคาว','กวาง','กระต่าย','ไก่ป่า','เนื้อสัตว์','เนื้อย่าง','ซุปเห็ด','ยาบำรุง','ยาบำรุงกำลัง','ไข่','ไข่นก','ไข่จระเข้','รวงผึ้ง','กุ้งฝอย','หอยเชลล์','ปูน้ำจืด','กุ้งมังกรป่า','รังตั๊กแตน','หม้อไฟป่า','ซุปสมาธิ'].includes(item); }
 
 function addStatus(arr, s) { return arr.includes(s) ? arr : [...arr, s]; }
 
