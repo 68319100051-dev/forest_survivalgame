@@ -183,6 +183,11 @@ body::before { z-index: 0; opacity: .6; }
 @keyframes combatIn { from { opacity: 0; transform: scale(.85) translateY(20px); } }
 .combat-btn { position: relative; overflow: hidden; }
 
+/* on one-column layouts the play area (scene, story, actions) comes first */
+@media (max-width: 900px) {
+  #center-panel { order: -1; }
+}
+
 @media (max-width: 520px) {
   #story-box { height: 220px; }
   .tb-title { font-size: 16px; }

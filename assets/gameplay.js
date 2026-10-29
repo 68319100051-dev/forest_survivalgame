@@ -22,7 +22,11 @@
   }
   function alive() { return g().players.map((p, i) => ({ p, i })).filter(x => x.p.alive); }
   function sfx(n) { if (window.FX) FX.sfx(n); }
-  function cutsceneShowing() { const el = document.getElementById('fx-cutscene'); return !!(el && el.classList.contains('show')); }
+  // a cutscene or the tutorial is on screen: modals wait until it's gone
+  function cutsceneShowing() {
+    const el = document.getElementById('fx-cutscene'), tut = document.getElementById('tut-root');
+    return !!((el && el.classList.contains('show')) || (tut && tut.classList.contains('show')));
+  }
   function whenClear(fn) { // wait for any cutscene to finish before opening a modal
     if (!cutsceneShowing()) return fn();
     const t = setInterval(() => { if (!cutsceneShowing()) { clearInterval(t); fn(); } }, 200);
@@ -134,10 +138,14 @@
     const notes = [];
     const c = {
       p, pi,
-      has: it => p.inventory.includes(it),
-      hasAny: list => list.some(it => p.inventory.includes(it)),
+      // basic materials live in the team pouch (G.mats), everything else in the bag
+      has: it => p.inventory.includes(it) || (isBasicMat(it) && matCount(it) > 0),
+      hasAny: list => list.some(it => p.inventory.includes(it) || (isBasicMat(it) && matCount(it) > 0)),
       food: () => p.inventory.find(it => isFood(it) && !['ผลไม้มีพิษ', 'น้ำเน่า', 'อาหารอาบยาพิษ'].includes(it)),
-      take: it => { const k = p.inventory.indexOf(it); if (k > -1) { p.inventory.splice(k, 1); notes.push(`-${it}`); return true; } return false; },
+      take: it => {
+        if (isBasicMat(it) && !p.inventory.includes(it) && matCount(it) > 0) { s.mats[it]--; notes.push(`-${it}`); return true; }
+        const k = p.inventory.indexOf(it); if (k > -1) { p.inventory.splice(k, 1); notes.push(`-${it}`); return true; } return false;
+      },
       give: it => { if (addToInventory(pi, it)) notes.push(`+${it}`); },
       toCamp: it => { s.camp.sharedItems.push(it); notes.push(`📦+${it}`); },
       hp: d => { p.hp = cl(p.hp + d, 0, 100); notes.push(`❤️${d > 0 ? '+' : ''}${d}`); },
@@ -321,7 +329,10 @@
 
   function pickSituation(locId) {
     const s = st(), seen = s.seen;
-    const pool = SITUATIONS.filter(x => (!x.locs || x.locs.includes(locId)) && (!x.when || x.when()) && !seen.includes(x.id));
+    const fits = x => (!x.locs || x.locs.includes(locId)) && (!x.when || x.when());
+    let pool = SITUATIONS.filter(x => fits(x) && !seen.includes(x.id));
+    // once every fitting situation has been seen, allow repeats (but not the last 3 or the one-off stories)
+    if (!pool.length) pool = SITUATIONS.filter(x => fits(x) && !seen.slice(-3).includes(x.id) && !['stranger', 'body'].includes(x.id));
     if (!pool.length) return null;
     // prefer location-specific ones
     const specific = pool.filter(x => x.locs);
@@ -374,7 +385,7 @@
       const s = g(), p = s.players[pi];
       const loc = meta && meta.loc;
       if (!interrupted && loc && s.locations.includes(loc) && isLocalHuman(pi) && p.alive &&
-          !s.dayDone[pi] && s.currentPlayer === pi && !s.combatState && p.hoursLeft > 0 && rnd() < 0.4) {
+          !s.dayDone[pi] && s.currentPlayer === pi && !s.combatState && p.hoursLeft > 0 && rnd() < 0.6) {
         const sit = pickSituation(loc.id);
         if (sit) {
           s.isLoading = true; // block input until the modal opens
@@ -494,7 +505,7 @@
     const sts = g().camp.structures;
     return (sts.includes('campfire') ? 1 : 0) + (sts.includes('fence') ? 1 : 0) + (sts.includes('trapfence') ? 2 : 0);
   }
-  function runNight(guardPi) {
+  function runNight(guardPi, evilChoice) {
     const s = g(), story = st();
     story.guard = guardPi;
     const guard = guardPi === null ? null : s.players[guardPi];
@@ -513,11 +524,20 @@
       story.flags.strangerRevenge = true;
       if (guard) {
         lines.push(`🧔 เงาคนแอบย่องเข้ามาในแคมป์ แต่ ${guard.name} ที่เฝ้ายามอยู่ตะโกนไล่ไปได้ทัน`);
+      } else if (sts.includes('lock') && rnd() < 0.7) {
+        lines.push('🔐 ชายที่ถูกปล้นกลับมาแก้แค้น แต่งัดกุญแจคลังไม่ออก จึงหนีไปมือเปล่า');
       } else {
         const lost = s.camp.sharedItems.splice(0, 2);
         lines.push(`🧔 ชายที่ถูกปล้นกลับมาแก้แค้น! เขาขโมย${lost.length ? ` ${lost.join(', ')} ` : 'ของ'}จากคลังแคมป์ไป`);
         tone = 'bad';
       }
+    }
+
+    // the evil player's secret night action (assets/roles.js)
+    if (window.ROLES) {
+      const r = ROLES.resolveNight(guardPi, evilChoice);
+      lines.push(...r.lines);
+      if (r.tone === 'bad') tone = 'bad';
     }
 
     // animal raid
@@ -537,7 +557,7 @@
         const victims = alive().filter(x => x.p.atCamp);
         const v = victims.length ? pick(victims) : null;
         if (v) { v.p.hp = cl(v.p.hp - 14, 0, 100); v.p.statuses = addStatus(v.p.statuses, 'injured'); }
-        const stolen = s.camp.sharedItems.length ? s.camp.sharedItems.splice(Math.floor(rnd() * s.camp.sharedItems.length), 1) : [];
+        const stolen = (s.camp.sharedItems.length && !sts.includes('lock')) ? s.camp.sharedItems.splice(Math.floor(rnd() * s.camp.sharedItems.length), 1) : [];
         lines.push(`🐺 ${beast}บุกแคมป์ตอนทุกคนหลับ!${v ? ` ${v.p.name} ถูกกัดบาดเจ็บ (HP -14)` : ''}${stolen.length ? ` และคาบ ${stolen[0]} ไป` : ''}`);
         tone = 'bad';
       }
@@ -585,6 +605,19 @@
     return { lines, tone };
   }
 
+  // Run the night with this guard. If the local player is evil, they secretly pick an action first.
+  function nightWith(guardPi, done) {
+    if (window.ROLES && ROLES.localEvil()) {
+      openModal({
+        night: true, icon: '🔴', title: 'คืนนี้คุณจะทำอะไร? (ไม่มีใครเห็นหน้านี้)',
+        text: ROLES.evilPrompt(guardPi),
+        choices: ROLES.evilOptions(guardPi).map(o => ({ icon: o.icon, label: o.label, hint: o.hint, disabled: o.disabled, onPick: () => done(runNight(guardPi, o.id)) })),
+      });
+      return;
+    }
+    done(runNight(guardPi, window.ROLES ? ROLES.botEvilChoice(guardPi) : null));
+  }
+
   function autoGuard() {
     const cands = alive().filter(x => x.p.energy >= 30).sort((a, b) => b.p.energy - a.p.energy);
     return cands.length ? cands[0].i : null;
@@ -601,19 +634,16 @@
     // would count as survived — end it here instead
     const finish = () => alive().length ? orig.apply(self, args) : gameEnd(false);
     if (!canChoose) {
-      try { runNight(autoGuard()); } catch (e) { console.warn('[gameplay] night', e); }
+      try { nightWith(autoGuard(), () => {}); } catch (e) { console.warn('[gameplay] night', e); }
       return finish();
     }
     whenClear(() => {
       const ch = alive().map(x => ({
         icon: x.p.emoji || '👤', label: `${x.p.name} เฝ้ายาม`, hint: `${x.p.job ? x.p.job.emoji + ' ' + x.p.job.name + ' · ' : ''}⚡ ${x.p.energy}%  ❤️ ${x.p.hp}`,
-        onPick: () => {
-          const r = runNight(x.i);
-          showResult(r.lines.join('\n'), r.tone, finish, 'นอนหลับ 💤');
-        },
+        onPick: () => nightWith(x.i, r => showResult(r.lines.join('\n'), r.tone, finish, 'นอนหลับ 💤')),
       }));
       ch.push({ icon: '😴', label: 'ไม่มีใครเฝ้า ทุกคนนอนพัก', hint: 'ทุกคนได้พลังงาน +5 แต่แคมป์ไม่มีคนดูแล',
-        onPick: () => { const r = runNight(null); showResult(r.lines.join('\n'), r.tone, finish, 'นอนหลับ 💤'); } });
+        onPick: () => nightWith(null, r => showResult(r.lines.join('\n'), r.tone, finish, 'นอนหลับ 💤')) });
       const def = defenses();
       $('gp-card').classList.add('night');
       openModal({
@@ -671,5 +701,6 @@
     return res;
   });
 
-  window.GP = { SITUATIONS, ENDINGS, endingFor, refreshQuestBox, lastEnding: null, _runSituation: runSituation, _pickSituation: pickSituation };
+  window.GP = { SITUATIONS, ENDINGS, endingFor, refreshQuestBox, lastEnding: null, _runSituation: runSituation, _pickSituation: pickSituation,
+    openModal, showResult, closeModal, whenClear };
 })();
