@@ -421,16 +421,20 @@
     },
     victory: {
       dur: 5.0, sound: 'victory',
-      caption: d => ['🚁 รอดชีวิตแล้ว!', `${d.names} ได้รับการช่วยเหลือ!`],
+      // d.ending comes from assets/gameplay.js when it is loaded
+      caption: d => d.ending ? [`${d.ending.icon} ${d.ending.title}`, d.ending.text]
+                             : ['🚁 รอดชีวิตแล้ว!', `${d.names} ได้รับการช่วยเหลือ!`],
       draw(t, d) {
         sky('#4a90d8', '#ffe8a8');
         ctx.fillStyle = '#ffd84a'; ctx.beginPath(); ctx.arc(160, 26, 10, 0, 7); ctx.fill();
         forestLayer(0, 12, GROUND - 4, 14, 26, '#3a6a4a', null, 14);
         ground('#3c7a2c', '#5aa03a');
-        const hx = W + 30 - Math.min(1, t / 2.4) * 120, hy = 18 + Math.min(1, t / 2.4) * 34 + Math.sin(t * 3) * 2;
-        heli(hx, hy, t);
-        if (t > 2.4) { // rope ladder
-          for (let i = 0; i < 12; i++) R(hx - 1, hy + 4 + i * 2, 1, 1, '#c9a24a');
+        if (!d.ending || ['legend', 'rescued'].includes(d.ending.id)) { // no helicopter unless rescued
+          const hx = W + 30 - Math.min(1, t / 2.4) * 120, hy = 18 + Math.min(1, t / 2.4) * 34 + Math.sin(t * 3) * 2;
+          heli(hx, hy, t);
+          if (t > 2.4) { // rope ladder
+            for (let i = 0; i < 12; i++) R(hx - 1, hy + 4 + i * 2, 1, 1, '#c9a24a');
+          }
         }
         d.aliveIdx.forEach((pi, i) => person(40 + i * 14, GROUND - 11, shirtFor(pi), (t * 4 + i) % 2 | 0, 'wave'));
         // confetti
@@ -440,7 +444,8 @@
     },
     defeat: {
       dur: 4.0, sound: 'defeat',
-      caption: d => ['💀 ป่ากลืนกินทุกคน...', 'ไม่มีใครรอดพ้นจากป่าดงดิบแห่งนี้'],
+      caption: d => d.ending ? [`${d.ending.icon} ${d.ending.title}`, d.ending.text]
+                             : ['💀 ป่ากลืนกินทุกคน...', 'ไม่มีใครรอดพ้นจากป่าดงดิบแห่งนี้'],
       draw(t) {
         sky('#08080c', '#20141a');
         forestLayer(t * 2, 6, GROUND - 2, 18, 34, '#0e1210', null, 13);
@@ -709,7 +714,7 @@
   wrap('gameEnd', orig => function (survived) {
     const s = g();
     const ai = aliveIdx();
-    const data = { aliveIdx: ai, names: ai.map(i => s.players[i].name).join(', ') };
+    const data = { aliveIdx: ai, names: ai.map(i => s.players[i].name).join(', '), ending: window.GP && GP.lastEnding };
     const self = this, args = arguments;
     if (!prefs.cutscenes) return orig.apply(self, args);
     play(survived ? 'victory' : 'defeat', data).then(() => orig.apply(self, args));
