@@ -1889,6 +1889,10 @@ function botChooseAction(pi) {
     return;
   }
 
+  // Safety net: an action that keeps failing without spending time would loop forever
+  if (p.botCallDay !== G.day) { p.botCallDay = G.day; p.botCalls = 0; }
+  if (++p.botCalls > 60) { console.warn('[bot] too many decisions this turn, ending it', p.name); endPlayerTurn(pi); return; }
+
   const caution = getDifficulty().botCaution;
   const isDoc = p.job.id === 'doctor';
   const hasHerb = !!pickHealItem(p);
@@ -1939,7 +1943,9 @@ function botChooseAction(pi) {
   // 6. Craft a weapon before walking into the wild
   if (!botHasWeapon(p) && p.hoursLeft >= 2) {
     const spear = CRAFTS.find(c => c.name === 'หอก');
-    if (haveAll(pi, spear.needs) && p.hoursLeft >= craftHours(pi, spear.time)) {
+    // doCraft refuses when the bag is full away from camp; checking here keeps the bot from retrying forever
+    if (haveAll(pi, spear.needs) && p.hoursLeft >= craftHours(pi, spear.time) &&
+        (p.inventory.length < getInventoryLimit(p) || p.atCamp)) {
       doCraft(pi, spear.name);
       return;
     }

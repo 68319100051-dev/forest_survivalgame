@@ -219,6 +219,8 @@
   // ---------- story feed: event cards ----------
   const IMPORTANT = /🗳️|📜|☀️ วันที่|👁️|☠️|🏆|🚪|🚁|💥|🎯|🏅|💡|⚔️ คุณ|🔔|🪓|🎒 ตื่นเช้า/;
   function chipsFor(text) {
+    // craft/build lines quote the item's description ("HP +15"), which isn't a real change
+    if (/คราฟ|สร้าง .* ให้แคมป์|ใช้สกิล/.test(text)) return '';
     const chips = [];
     const re = /(HP|พลังงาน|สติ|ค่าสติ|Sanity|หิว|ความหิว|น้ำ|ความกระหาย)\s*([+-]\s?\d+)/g;
     let m;
