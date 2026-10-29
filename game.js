@@ -1453,6 +1453,7 @@ function renderActions(pi) {
   btns.forEach(b => {
     const btn = document.createElement('button');
     btn.className = 'act-btn' + (b.highlight ? ' highlight' : '');
+    btn.dataset.action = b.action;
     btn.style.position = 'relative';
     btn.innerHTML = `<span>${b.label}</span><span class="act-cost">${b.cost}</span>${b.badge ? '<div class="craft-badge"></div>' : ''}`;
     btn.onclick = () => handleAction(pi, b.action);

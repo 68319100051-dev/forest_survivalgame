@@ -329,7 +329,10 @@
 
   function pickSituation(locId) {
     const s = st(), seen = s.seen;
-    const pool = SITUATIONS.filter(x => (!x.locs || x.locs.includes(locId)) && (!x.when || x.when()) && !seen.includes(x.id));
+    const fits = x => (!x.locs || x.locs.includes(locId)) && (!x.when || x.when());
+    let pool = SITUATIONS.filter(x => fits(x) && !seen.includes(x.id));
+    // once every fitting situation has been seen, allow repeats (but not the last 3 or the one-off stories)
+    if (!pool.length) pool = SITUATIONS.filter(x => fits(x) && !seen.slice(-3).includes(x.id) && !['stranger', 'body'].includes(x.id));
     if (!pool.length) return null;
     // prefer location-specific ones
     const specific = pool.filter(x => x.locs);
@@ -382,7 +385,7 @@
       const s = g(), p = s.players[pi];
       const loc = meta && meta.loc;
       if (!interrupted && loc && s.locations.includes(loc) && isLocalHuman(pi) && p.alive &&
-          !s.dayDone[pi] && s.currentPlayer === pi && !s.combatState && p.hoursLeft > 0 && rnd() < 0.4) {
+          !s.dayDone[pi] && s.currentPlayer === pi && !s.combatState && p.hoursLeft > 0 && rnd() < 0.6) {
         const sit = pickSituation(loc.id);
         if (sit) {
           s.isLoading = true; // block input until the modal opens
